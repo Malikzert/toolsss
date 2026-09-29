@@ -6,10 +6,11 @@
      ══════════════════════════════════════════ */
 
   var PAGES = [
-    { href: 'index.html',    label: 'Dokumen Reader' },
-    { href: 'crop.html',     label: 'Potong Gambar' },
-    { href: 'gabung.html',   label: 'Gabung ke PDF' },
-    { href: 'konversi.html', label: 'Konversi' }
+    { href: 'dashboard.html', label: 'Dashboard' },
+    { href: 'index.html',     label: 'Dokumen Reader' },
+    { href: 'crop.html',      label: 'Potong Gambar' },
+    { href: 'gabung.html',    label: 'Gabung ke PDF' },
+    { href: 'konversi.html',  label: 'Konversi' }
   ];
 
   var COLS = 5;
@@ -32,7 +33,7 @@
   var links = PAGES.map(function (page, i) {
     var cls = 'vx-link' + (page.href === current ? ' active' : '');
     return '<li><a class="' + cls + '" href="' + page.href + '">' +
-      '<span class="vx-num">0' + (i + 1) + '</span>' +
+      '<span class="vx-num">' + (i + 1 < 10 ? '0' + (i + 1) : String(i + 1)) + '</span>' +
       '<span>' + page.label + '</span>' +
       '</a></li>';
   }).join('');

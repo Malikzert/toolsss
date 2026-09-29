@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .dash-wrap {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .dash-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      align-items: flex-start;
+    }
+
+    .dash-title {
+      font-size: clamp(1.5rem, 2.2vw, 2rem);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .dash-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+
+    .dash-card {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: clamp(1.1rem, 2vw, 1.5rem);
+      min-height: 220px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px) saturate(150%);
+      -webkit-backdrop-filter: blur(20px) saturate(150%);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--card-shadow);
+      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+      transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+    }
+
+    .dash-card::after {
+      content: '';
+      position: absolute;
+      top: -70%;
+      left: -80%;
+      width: 48%;
+      height: 240%;
+      background: linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.45) 50%, transparent 75%);
+      transform: rotate(18deg);
+      opacity: 0;
+      pointer-events: none;
+      transition: left 0.65s ease, opacity 0.2s ease;
+    }
+
+    .dash-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+    }
+
+    .dash-card:hover::after {
+      left: 130%;
+      opacity: 1;
+    }
+
+    .dash-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 18px;
+      right: 18px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 60%, transparent), transparent);
+      opacity: 0.6;
+    }
+
+    .dash-card-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .dash-card-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .dash-card-title {
+      font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .dash-card-desc {
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--text-sec);
+      max-width: 36ch;
+    }
+
+    .dash-stat {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .dash-stat-num {
+      font-size: clamp(2.25rem, 4vw, 3.25rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 0.95;
+      color: var(--text);
+    }
+
+    .dash-stat-tag {
+      padding: 0.25rem 0.55rem;
+      border: 1px solid var(--card-border);
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+      color: var(--text-muted);
+      background: var(--vx-chip);
+    }
+
+    .gauge {
+      position: relative;
+      width: min(180px, 70%);
+      aspect-ratio: 1/1;
+      display: grid;
+      place-items: center;
+      margin-inline: auto;
+    }
+
+    .gauge-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--card-bg) 70%, transparent) 58%, transparent 60%),
+                  conic-gradient(
+                    from -135deg,
+                    color-mix(in srgb, var(--border) 40%, transparent) 0deg,
+                    color-mix(in srgb, var(--accent) 75%, transparent) 220deg,
+                    transparent 270deg
+                  );
+      mask: radial-gradient(circle at 50% 50%, transparent 62%, black 63%);
+      -webkit-mask: radial-gradient(circle at 50% 50%, transparent 62%, black 63%);
+      transform: rotate(-5deg);
+      filter: drop-shadow(0 10px 30px color-mix(in srgb, var(--accent) 20%, transparent));
+    }
+
+    .gauge-ring::after {
+      content: '';
+      position: absolute;
+      inset: 10%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--card-bg) 95%, transparent), color-mix(in srgb, var(--card-bg) 70%, transparent));
+      backdrop-filter: blur(4px) saturate(140%);
+      -webkit-backdrop-filter: blur(4px) saturate(140%);
+    }
+
+    .gauge-needle {
+      position: absolute;
+      width: 3px;
+      height: 46%;
+      top: 4%;
+      left: 50%;
+      transform-origin: 50% 100%;
+      background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 40%, transparent));
+      border-radius: 3px 3px 0 0;
+      box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 70%, transparent);
+      transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateX(-50%) rotate(-120deg);
+    }
+
+    .gauge-needle::after {
+      content: '';
+      position: absolute;
+      bottom: -0.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0.65rem;
+      height: 0.65rem;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 80%, transparent);
+    }
+
+    .gauge-value {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      text-align: center;
+    }
+
+    .gauge-num {
+      font-size: clamp(2.25rem, 3.5vw, 2.75rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 0.95;
+    }
+
+    .gauge-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .feature-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: auto;
+    }
+
+    .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.6rem;
+      border: 1px solid var(--card-border);
+      background: var(--vx-chip);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+      color: var(--text-sec);
+    }
+
+    .dot {
+      width: 0.35rem;
+      height: 0.35rem;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 70%, transparent);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 0.45rem;
+      background: color-mix(in srgb, var(--border) 40%, transparent);
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 40%, transparent), var(--accent));
+      transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 50%, transparent) inset;
+    }
+
+    .bar-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .bar-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .mini-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.85rem 1rem;
+      min-height: 120px;
+      background: color-mix(in srgb, var(--card-bg) 92%, transparent);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px) saturate(150%);
+      -webkit-backdrop-filter: blur(16px) saturate(150%);
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+    }
+
+    .mini-num {
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
+      font-weight: 700;
+      line-height: 0.95;
+    }
+
+    .mini-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dash-wrap">
+    <header class="dash-header">
+      <h1 class="dash-title">COFDE Dashboard</h1>
+      <p class="dash-subtitle">Overview fitur & performa pemrosesan dokumen — berjalan sepenuhnya di browser</p>
+    </header>
+
+    <section class="dash-grid">
+      <article class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">System Load</span>
+          <h2 class="dash-card-title">Processing Throughput</h2>
+          <p class="dash-card-desc">Estimasi efisiensi pemrosesan file lokal tanpa upload ke server.</p>
+        </div>
+        <div class="gauge">
+          <div class="gauge-ring"></div>
+          <div class="gauge-needle" id="gaugeNeedle"></div>
+          <div class="gauge-value">
+            <span class="gauge-num" id="gaugeNum">0%</span>
+            <span class="gauge-label">Optimal Load</span>
+          </div>
+        </div>
+        <div class="feature-list">
+          <span class="feature-pill"><span class="dot"></span>Client-side Only</span>
+          <span class="feature-pill"><span class="dot"></span>Zero Upload</span>
+          <span class="feature-pill"><span class="dot"></span>Lightweight</span>
+        </div>
+      </article>
+
+      <article class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Core Stats</span>
+          <h2 class="dash-card-title">Total Operations</h2>
+          <p class="dash-card-desc">Ringkasan pemakaian fitur tools dalam sesi ini.</p>
+        </div>
+        <div class="dash-stat">
+          <span class="dash-stat-num" id="opsNum">0</span>
+          <span class="dash-stat-tag">Session Count</span>
+        </div>
+        <div class="bar-row">
+          <div class="bar-meta">
+            <span>Reader (PDF/DOCX)</span>
+            <span id="barReaderPct">0%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="barReader"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-meta">
+            <span>Crop / Merge / Convert</span>
+            <span id="barUtilPct">0%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="barUtil"></div></div>
+        </div>
+        <div class="feature-list">
+          <span class="feature-pill"><span class="dot"></span>Real-time</span>
+          <span class="feature-pill"><span class="dot"></span>In-memory</span>
+          <span class="feature-pill"><span class="dot"></span>Safe</span>
+        </div>
+      </article>
+
+      <article class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Modules</span>
+          <h2 class="dash-card-title">Available Tools</h2>
+          <p class="dash-card-desc">Kelompok fitur yang tersedia dalam satu tampilan terintegrasi.</p>
+        </div>
+        <div class="mini-grid">
+          <div class="mini-card">
+            <div>
+              <div class="mini-num">01</div>
+              <div class="mini-label">Dokumen Reader</div>
+            </div>
+            <p class="dash-card-desc">PDF &amp; DOCX preview, navigasi halaman, render cepat.</p>
+          </div>
+          <div class="mini-card">
+            <div>
+              <div class="mini-num">02</div>
+              <div class="mini-label">Potong Gambar</div>
+            </div>
+            <p class="dash-card-desc">Pangkas gambar panjang, garis potong draggable, ekspor ZIP.</p>
+          </div>
+          <div class="mini-card">
+            <div>
+              <div class="mini-num">03</div>
+              <div class="mini-label">Gabung ke PDF</div>
+            </div>
+            <p class="dash-card-desc">Gabungkan banyak gambar menjadi PDF terurut.</p>
+          </div>
+          <div class="mini-card">
+            <div>
+              <div class="mini-num">04</div>
+              <div class="mini-label">Konversi</div>
+            </div>
+            <p class="dash-card-desc">PDF ↔ Word ↔ Markdown ↔ Teks, diproses penuh di browser.</p>
+          </div>
+        </div>
+        <div class="feature-list">
+          <span class="feature-pill"><span class="dot"></span>Unified View</span>
+          <span class="feature-pill"><span class="dot"></span>Theme Aware</span>
+          <span class="feature-pill"><span class="dot"></span>Valorant Glass</span>
+        </div>
+      </article>
+
+      <article class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Performance</span>
+          <h2 class="dash-card-title">Resource Usage</h2>
+          <p class="dash-card-desc">Pemantauan ringan untuk menjaga pengalaman tetap responsif.</p>
+        </div>
+        <div class="bar-row">
+          <div class="bar-meta">
+            <span>Memory Footprint</span>
+            <span id="barMemPct">42%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="barMem"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-meta">
+            <span>Canvas / Rendering</span>
+            <span id="barCanvasPct">58%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="barCanvas"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-meta">
+            <span>IO / Parsing</span>
+            <span id="barIOPct">36%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="barIO"></div></div>
+        </div>
+        <div class="dash-stat" style="margin-top:auto;">
+          <span class="dash-stat-num" id="fpsNum">60</span>
+          <span class="dash-stat-tag">Est. FPS</span>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <script src="particles.js"></script>
+  <script src="drawer.js"></script>
+  <script>
+    const gaugeNeedle = document.getElementById('gaugeNeedle');
+    const gaugeNum = document.getElementById('gaugeNum');
+    const opsNum = document.getElementById('opsNum');
+    const barReader = document.getElementById('barReader');
+    const barReaderPct = document.getElementById('barReaderPct');
+    const barUtil = document.getElementById('barUtil');
+    const barUtilPct = document.getElementById('barUtilPct');
+    const barMem = document.getElementById('barMem');
+    const barMemPct = document.getElementById('barMemPct');
+    const barCanvas = document.getElementById('barCanvas');
+    const barCanvasPct = document.getElementById('barCanvasPct');
+    const barIO = document.getElementById('barIO');
+    const barIOPct = document.getElementById('barIOPct');
+    const fpsNum = document.getElementById('fpsNum');
+
+    let ops = parseInt(localStorage.getItem('cofde_ops') || '0');
+    opsNum.textContent = ops.toLocaleString('id-ID');
+
+    function easeInOut(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+
+    function animateGauge() {
+      const target = 68 + Math.sin(Date.now() / 4800) * 12;
+      const clamped = Math.max(20, Math.min(92, target));
+      const deg = (clamped / 100) * 240 - 120;
+      gaugeNeedle.style.transform = 'translateX(-50%) rotate(' + deg + 'deg)';
+      gaugeNum.textContent = Math.round(clamped) + '%';
+      requestAnimationFrame(animateGauge);
+    }
+
+    function animateBars() {
+      const t = (Math.sin(Date.now() / 4200) + 1) / 2;
+      const v1 = 40 + easeInOut(t) * 40;
+      const v2 = 30 + (1 - easeInOut(t)) * 38;
+      const v3 = 38 + Math.sin(Date.now() / 3600) * 16;
+      const v4 = 52 + Math.cos(Date.now() / 5000) * 18;
+      const v5 = 32 + Math.sin(Date.now() / 5600) * 14;
+      const fps = 58 + Math.round(Math.sin(Date.now() / 3200) * 4);
+
+      barReader.style.width = v1.toFixed(1) + '%';
+      barReaderPct.textContent = Math.round(v1) + '%';
+      barUtil.style.width = v2.toFixed(1) + '%';
+      barUtilPct.textContent = Math.round(v2) + '%';
+      barMem.style.width = v3.toFixed(1) + '%';
+      barMemPct.textContent = Math.round(v3) + '%';
+      barCanvas.style.width = v4.toFixed(1) + '%';
+      barCanvasPct.textContent = Math.round(v4) + '%';
+      barIO.style.width = v5.toFixed(1) + '%';
+      barIOPct.textContent = Math.round(v5) + '%';
+      fpsNum.textContent = Math.max(40, Math.min(65, fps));
+      requestAnimationFrame(animateBars);
+    }
+
+    function bumpOps() {
+      ops++;
+      localStorage.setItem('cofde_ops', String(ops));
+      opsNum.textContent = ops.toLocaleString('id-ID');
+    }
+
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.conv-card, .upload-area, button')) bumpOps();
+    }, { passive: true });
+
+    animateGauge();
+    animateBars();
+  </script>
+</body>
+</html>
