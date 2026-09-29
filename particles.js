@@ -1,27 +1,55 @@
 (function () {
   /* ══════════════════════════════════════════
-     Fire Particles Canvas + Theme System
+     Glass Particles Canvas + Theme System
+     Small drifting glass shards + soft bokeh
      ══════════════════════════════════════════ */
 
+  /* ── Theme Registry ── */
+  var THEMES = {
+    lightholy: {
+      label: 'Lightholy',
+      tint: ['#ffd9a0', '#ffc46b', '#f0b45c', '#fff0cd', '#ffe3b3']
+    },
+    darkside: {
+      label: 'Darkside',
+      tint: ['#ff4655', '#ff7a86', '#e63946', '#ff9aa4', '#c92a3a']
+    },
+    abyss: {
+      label: 'Abyss',
+      tint: ['#2ee6d6', '#3fd0f0', '#5aa9ff', '#9df5ea', '#1fb6c9']
+    }
+  };
+
+  var DEFAULT_THEME = 'lightholy';
+  var STORAGE_KEY = 'fire-theme';
+  var LEGACY = { light: 'lightholy', dark: 'darkside', green: 'lightholy', purple: 'abyss' };
+
+  function readStored() {
+    var raw;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+    if (!raw) return DEFAULT_THEME;
+    if (THEMES[raw]) return raw;
+    if (LEGACY[raw]) return LEGACY[raw];
+    return DEFAULT_THEME;
+  }
+
+  var currentTheme = readStored();
+
   /* ── Canvas Setup ── */
-  const canvas = document.createElement('canvas');
+  var canvas = document.createElement('canvas');
   canvas.style.cssText =
     'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;';
   document.body.prepend(canvas);
-  const ctx = canvas.getContext('2d');
-  let W, H;
+  var ctx = canvas.getContext('2d');
+  var W, H;
 
-  /* ── Theme Particle Colors ── */
-  const THEMES = {
-    light:  { particles: ['#ff2020', '#ff4411', '#ff6622', '#ff8800', '#ffaa00'] },
-    dark:   { particles: ['#1e6fff', '#3b9aff', '#5eb8ff', '#80c4ff', '#2563eb'] },
-    green:  { particles: ['#0f8a3f', '#16a34a', '#22c55e', '#4ade80', '#15803d'] },
-    purple: { particles: ['#7c3aed', '#8b5cf6', '#a855f7', '#c084fc', '#9333ea'] }
-  };
-
-  let currentTheme = localStorage.getItem('fire-theme') || 'light';
-  const particles = [];
-  const MAX = 65;
+  var shards = [];
+  var motes = [];
+  var flecks = [];
+  var MAX_SHARDS = 80;
+  var MAX_MOTES = 9;
+  var MAX_FLECKS = 44;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ── Resize ── */
   function resize() {
@@ -29,102 +57,201 @@
     H = canvas.height = window.innerHeight;
   }
 
-  /* ── Particle Factory ── */
-  function spawn() {
-    var colors = THEMES[currentTheme].particles;
+  /* ── Factories ── */
+  function pick(list) {
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  function spawnShard() {
+    var size = 3 + Math.random() * 8;
     return {
       x: Math.random() * W,
-      y: H + Math.random() * 40,
-      r: Math.random() * 2.5 + 0.5,
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: -(Math.random() * 1.6 + 0.4),
-      color: colors[Math.floor(Math.random() * colors.length)],
-      alpha: 0.85 + Math.random() * 0.15,
-      decay: 0.003 + Math.random() * 0.005,
-      wobble: Math.random() * Math.PI * 2,
-      wobbleSpeed: 0.015 + Math.random() * 0.03,
-      wobbleAmp: 0.3 + Math.random() * 0.4
+      y: H + Math.random() * 30,
+      w: size,
+      h: size * (0.5 + Math.random() * 0.55),
+      rot: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 0.007,
+      vy: -(0.1 + Math.random() * 0.42),
+      vx: (Math.random() - 0.5) * 0.16,
+      alpha: 0.12 + Math.random() * 0.34,
+      tint: pick(THEMES[currentTheme].tint),
+      wob: Math.random() * Math.PI * 2,
+      wobSpeed: 0.008 + Math.random() * 0.02,
+      wobAmp: 0.14 + Math.random() * 0.34
     };
+  }
+
+  function spawnMote() {
+    return {
+      x: Math.random() * W,
+      y: H + Math.random() * 60,
+      r: 26 + Math.random() * 62,
+      vx: (Math.random() - 0.5) * 0.09,
+      vy: -(0.05 + Math.random() * 0.16),
+      alpha: 0.05 + Math.random() * 0.1,
+      tint: pick(THEMES[currentTheme].tint)
+    };
+  }
+
+  /* ── Cursor flecks: glass shards shed by the pointer ── */
+  function spawnFleck(x, y) {
+    var size = 3 + Math.random() * 9;
+    var ang = Math.random() * Math.PI * 2;
+    var push = 0.5 + Math.random() * 2.4;
+    return {
+      x: x + (Math.random() - 0.5) * 20,
+      y: y + (Math.random() - 0.5) * 20,
+      w: size,
+      h: size * (0.42 + Math.random() * 0.62),
+      rot: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 0.06,
+      vx: Math.cos(ang) * push,
+      vy: Math.sin(ang) * push - 0.5,
+      gravity: 0.055 + Math.random() * 0.05,
+      life: 1,
+      decay: 0.014 + Math.random() * 0.02,
+      tint: pick(THEMES[currentTheme].tint)
+    };
+  }
+
+  function trackPointer(e) {
+    if (reduceMotion) return;
+    if (flecks.length >= MAX_FLECKS) return;
+
+    var x = e.clientX;
+    var y = e.clientY;
+    if (x < -20 || y < -20 || x > W + 20 || y > H + 20) return;
+
+    flecks.push(spawnFleck(x, y));
+
+    if (flecks.length < MAX_FLECKS && Math.random() < 0.4) {
+      flecks.push(spawnFleck(x, y));
+    }
+  }
+
+  /* ── Draw: soft bokeh underlay ── */
+  function drawMotes() {
+    for (var i = 0; i < motes.length; i++) {
+      var m = motes[i];
+      ctx.save();
+      ctx.globalAlpha = m.alpha;
+      ctx.shadowBlur = 46;
+      ctx.shadowColor = m.tint;
+      ctx.fillStyle = m.tint;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  /* ── Paint one glass shard ── */
+  function paintShard(p, alpha) {
+    if (alpha <= 0.01) return;
+
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.globalAlpha = alpha;
+
+    ctx.fillStyle = p.tint;
+    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+
+    ctx.globalAlpha = Math.min(1, alpha + 0.4);
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 0.7;
+    ctx.strokeRect(-p.w / 2, -p.h / 2, p.w, p.h);
+
+    ctx.globalAlpha = alpha * 0.85;
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.beginPath();
+    ctx.moveTo(-p.w / 2, -p.h / 2);
+    ctx.lineTo(-p.w / 2 + p.w * 0.55, -p.h / 2);
+    ctx.lineTo(-p.w / 2, -p.h / 2 + p.h * 0.55);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  /* ── Draw: ambient glass shards ── */
+  function drawShards() {
+    for (var i = 0; i < shards.length; i++) paintShard(shards[i], shards[i].alpha);
+  }
+
+  /* ── Draw: cursor flecks ── */
+  function drawFlecks() {
+    for (var i = 0; i < flecks.length; i++) {
+      var f = flecks[i];
+      paintShard(f, f.life * 0.85);
+    }
   }
 
   /* ── Animation Loop ── */
   function loop() {
     ctx.clearRect(0, 0, W, H);
 
-    while (particles.length < MAX) particles.push(spawn());
+    while (shards.length < MAX_SHARDS) shards.push(spawnShard());
+    while (motes.length < MAX_MOTES) motes.push(spawnMote());
 
-    for (var i = particles.length - 1; i >= 0; i--) {
-      var p = particles[i];
-      p.wobble += p.wobbleSpeed;
-      p.x += p.vx + Math.sin(p.wobble) * p.wobbleAmp;
+    for (var i = shards.length - 1; i >= 0; i--) {
+      var p = shards[i];
+      p.wob += p.wobSpeed;
+      p.rot += p.vr;
+      p.x += p.vx + Math.sin(p.wob) * p.wobAmp;
       p.y += p.vy;
-      p.alpha -= p.decay;
-      p.r *= 0.9997;
-
-      if (p.alpha <= 0 || p.y < -20) {
-        particles.splice(i, 1);
-        continue;
-      }
-
-      ctx.save();
-      ctx.globalAlpha = p.alpha;
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = p.color;
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+      if (p.y < -30) shards.splice(i, 1);
     }
+
+    for (var j = motes.length - 1; j >= 0; j--) {
+      var m = motes[j];
+      m.x += m.vx;
+      m.y += m.vy;
+      if (m.y < -m.r * 2) motes.splice(j, 1);
+    }
+
+    for (var k = flecks.length - 1; k >= 0; k--) {
+      var f = flecks[k];
+      f.vy += f.gravity;
+      f.vx *= 0.985;
+      f.rot += f.vr;
+      f.x += f.vx;
+      f.y += f.vy;
+      f.life -= f.decay;
+      if (f.life <= 0 || f.y > H + 40) flecks.splice(k, 1);
+    }
+
+    drawMotes();
+    drawShards();
+    drawFlecks();
 
     requestAnimationFrame(loop);
   }
 
-  /* ── Theme Toggle UI ── */
-  function createToggle() {
-    var panel = document.createElement('div');
-    panel.className = 'theme-toggle';
-
-    var info = [
-      { key: 'light',  cls: 't-light',  label: 'Terang (Api Merah)' },
-      { key: 'dark',   cls: 't-dark',   label: 'Gelap (Api Biru)' },
-      { key: 'green',  cls: 't-green',  label: 'Hijau' },
-      { key: 'purple', cls: 't-purple', label: 'Ungu' }
-    ];
-
-    info.forEach(function (item) {
-      var btn = document.createElement('button');
-      btn.className = item.cls;
-      btn.title = item.label;
-      btn.dataset.theme = item.key;
-      if (item.key === currentTheme) btn.classList.add('active');
-      btn.addEventListener('click', function () {
-        setTheme(item.key);
-      });
-      panel.appendChild(btn);
-    });
-
-    document.body.appendChild(panel);
-  }
-
+  /* ── Theme Control ── */
   function setTheme(theme) {
+    if (!THEMES[theme]) return;
     currentTheme = theme;
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('fire-theme', theme);
+    try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
 
-    var btns = document.querySelectorAll('.theme-toggle button');
-    btns.forEach(function (b) {
-      b.classList.toggle('active', b.dataset.theme === theme);
-    });
-
-    /* Reset particles so they spawn with new colors immediately */
-    particles.length = 0;
+    /* Respawn with new tints immediately */
+    shards.length = 0;
+    motes.length = 0;
+    flecks.length = 0;
   }
 
   /* ── Init ── */
   resize();
   window.addEventListener('resize', resize);
+  window.addEventListener('pointermove', trackPointer, { passive: true });
   document.documentElement.setAttribute('data-theme', currentTheme);
-  createToggle();
   loop();
+
+  /* ── Public API (consumed by drawer.js) ── */
+  window.COFDE_THEME = {
+    themes: THEMES,
+    get: function () { return currentTheme; },
+    set: setTheme
+  };
 })();
