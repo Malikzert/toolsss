@@ -113,8 +113,8 @@
          yang sama persis dengan halaman yang memuat settings.js. */
       try { COFDE_THEME.set(theme); } catch (e) { /* abaikan */ }
     }
-    /* Sinkronkan chip tema di drawer bila ada. */
-    document.querySelectorAll('.vx-theme').forEach(function (b) {
+    /* Sinkronkan kartu tema di Settings (class .cx-theme-card). */
+    document.querySelectorAll('.cx-theme-card').forEach(function (b) {
       var on = b.dataset.theme === theme;
       b.classList.toggle('active', on);
       b.setAttribute('aria-pressed', String(on));

@@ -9,16 +9,16 @@
   var PAGES = [
     { name: 'Dashboard',        href: 'dashboard.html', keywords: 'ringkasan overview home statistik' },
     { name: 'Dokumen Reader',   href: 'reader.html',    keywords: 'pdf docx baca preview search' },
-    { name: 'Potong Gambar',    href: 'crop.html',      keywords: 'crop potong gambar screenshot rotasi flip' },
-    { name: 'Gabung ke PDF',    href: 'gabung.html',    keywords: 'gabung gambar pdf watermark' },
-    { name: 'Konversi',         href: 'konversi.html',  keywords: 'convert markdown teks word pdf batch' },
+    { name: 'Studio Tools',      href: 'tools.html',     keywords: 'studio tools crop potong gambar screenshot gabung pdf watermark convert konversi markdown teks word dev json base64 jwt uuid regex' },
+    { name: 'List Diff',        href: 'listdiff.html',  keywords: 'list diff bandingkan compare selisih berbeda baris data csv kolom' },
+    { name: 'Timer',            href: 'timer.html',     keywords: 'timer hitung mundur countdown stopwatch jam detik lap alarm' },
+    { name: 'Random Picker',    href: 'random.html',    keywords: 'random picker acak nama undian coin flip koin keping ekors ya tidak yes no pilihan' },
     { name: 'Gabung PDF',      href: 'merge.html',     keywords: 'merge gabung pdf combine' },
     { name: 'Pisah PDF',        href: 'split.html',     keywords: 'split pisah pdf extract' },
     { name: 'Expense Tracker',  href: 'expense.html',   keywords: 'expense pengeluaran budget keuangan income catatan' },
     { name: 'Maps',             href: 'maps.html',      keywords: 'peta lokasi gps koordinat lat long search' },
     { name: 'QR Code Tools',    href: 'qr.html',        keywords: 'qr barcode generate scan wifi kontak' },
-    { name: 'ML CSV Visualizer', href: 'mlcsv.html',    keywords: 'ml csv bleu loss experiment model training analyzer' },
-    { name: 'Developer Tools',  href: 'devtools.html',  keywords: 'json base64 jwt uuid regex hash color cron markdown sql dev' },
+    { name: 'ML CSV Visualizer', href: 'mlcsv.html',     keywords: 'ml csv bleu loss experiment model training analyzer' },
     { name: 'Settings',         href: 'settings.html',  keywords: 'pengaturan tema currency mata uang tanggal data export import' }
   ];
 

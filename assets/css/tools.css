@@ -1,0 +1,146 @@
+/* ══════════════════════════════════════════════════════════
+   Studio Tools — pemilih fitur + panel
+   Card valo di atas, konten fitur langsung di bawahnya.
+   ══════════════════════════════════════════════════════════ */
+
+.tl-picker {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.8rem;
+  margin: 0 0 1.6rem;
+}
+
+.tl-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 1rem 1.05rem 1.05rem;
+  text-align: left;
+  color: var(--vx-fg);
+  background: var(--vx-chip);
+  border: 1px solid var(--vx-edge);
+  cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  transition: background 0.22s ease, border-color 0.22s ease, color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+/* Garis aksen tipis di tepi atas, muncul saat hover/aktif. */
+.tl-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transform: scaleX(0.5);
+  transform-origin: left;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.tl-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--vx-edge));
+  transform: translateY(-4px);
+}
+
+.tl-card:hover::before {
+  opacity: 0.55;
+  transform: scaleX(1);
+}
+
+.tl-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.tl-card.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--vx-on-accent, #fff);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 42%, transparent);
+}
+
+.tl-card.is-active::before {
+  opacity: 1;
+  transform: scaleX(1);
+  background: var(--vx-on-accent, #fff);
+}
+
+.tl-card-num {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+}
+
+.tl-card.is-active .tl-card-num { color: var(--vx-on-accent, #fff); }
+
+.tl-card-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.tl-card-desc {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--vx-dim);
+}
+
+.tl-card.is-active .tl-card-desc { color: var(--vx-on-accent, #fff); opacity: 0.85; }
+
+/* Panel: hanya yang terpilih yang tampil, langsung di bawah card. */
+.tl-panel { outline: none; }
+
+.tl-panel[hidden] { display: none !important; }
+
+.tl-panel > h1 {
+  font-size: 1.5rem;
+  margin: 0 0 0.25rem;
+  color: var(--text);
+}
+
+.tl-panel > .subtitle {
+  color: var(--text-muted);
+  margin: 0 0 1.25rem;
+  font-size: 0.85rem;
+}
+
+/* Catatan kecil yang sebelumnya inline style di gabung.html */
+.tl-note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.tl-tips {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Panel legacy (crop/gabung) memakai judul inline; samakan dengan valo. */
+.tl-panel .layout { margin-top: 1.5rem; }
+
+.tl-panel .upload-area { max-width: 480px; }
+
+@media (max-width: 900px) {
+  .tl-picker { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .tl-picker {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  .tl-card { padding: 0.7rem 0.8rem 0.8rem; }
+  .tl-card-desc { display: none; }
+  .tl-panel > h1 { font-size: 1.25rem; }
+}

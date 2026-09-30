@@ -8,29 +8,22 @@
   var PAGES = [
     { href: 'dashboard.html', label: 'Dashboard' },
     { href: 'reader.html',    label: 'Dokumen Reader' },
-    { href: 'crop.html',      label: 'Potong Gambar' },
-    { href: 'gabung.html',    label: 'Gabung ke PDF' },
+    { href: 'tools.html',     label: 'Studio Tools' },
+    { href: 'listdiff.html',  label: 'List Diff' },
+    { href: 'timer.html',     label: 'Timer' },
+    { href: 'random.html',    label: 'Random Picker' },
     { href: 'merge.html',     label: 'Merge PDF' },
     { href: 'split.html',     label: 'Split PDF' },
-    { href: 'konversi.html',  label: 'Konversi' },
     { href: 'expense.html',   label: 'Expense Tracker' },
     { href: 'maps.html',      label: 'Maps' },
     { href: 'qr.html',        label: 'QR Code Tools' },
     { href: 'mlcsv.html',     label: 'ML CSV Visualizer' },
-    { href: 'devtools.html',  label: 'Developer Tools' },
     { href: 'settings.html',  label: 'Settings' }
   ];
 
   var COLS = 5;
   var ROWS = 4;
   var CRACK_MS = 260;
-
-  var api = window.COFDE_THEME;
-  var THEME_SWATCH = {
-    lightholy: 'linear-gradient(90deg, #fff6e2, #ffc46b)',
-    darkside: 'linear-gradient(90deg, #0f1923, #ff4655)',
-    abyss: 'linear-gradient(90deg, #04070f, #2ee6d6)'
-  };
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var current = location.pathname.split('/').pop() || 'dashboard.html';
@@ -46,22 +39,7 @@
       '</a></li>';
   }).join('');
 
-  /* ── Theme Chips ── */
-  var activeTheme = api ? api.get() : 'lightholy';
-  var themeButtons = '';
-
-  if (api) {
-    Object.keys(api.themes).forEach(function (key) {
-      var info = api.themes[key];
-      var cls = 'vx-theme' + (key === activeTheme ? ' active' : '');
-      themeButtons +=
-        '<button type="button" class="' + cls + '" data-theme="' + key + '" ' +
-        'aria-pressed="' + (key === activeTheme) + '">' +
-          '<span class="vx-swatch" style="background:' + (THEME_SWATCH[key] || '#888') + '"></span>' +
-          '<span class="vx-theme-name">' + info.label + '</span>' +
-        '</button>';
-    });
-  }
+  /* Theme chips dihapus: tema hanya diatur lewat Settings. */
 
   var scrim = document.createElement('div');
   scrim.className = 'vx-scrim';
@@ -73,10 +51,6 @@
     '<div class="vx-blink"></div>' +
     '<div class="vx-crack"></div>' +
     '<ul class="vx-list">' + links + '</ul>' +
-    '<div class="vx-themes">' +
-      '<div class="vx-sec-label">Theme</div>' +
-      '<div class="vx-theme-row" role="group" aria-label="Pilih tema">' + themeButtons + '</div>' +
-    '</div>' +
     '<div class="vx-foot">Klik di luar untuk menutup</div>';
 
   var corner = document.createElement('div');
@@ -320,28 +294,6 @@
   });
 
   scrim.addEventListener('click', close);
-
-  drawer.addEventListener('click', function (e) {
-    var btn = e.target.closest ? e.target.closest('.vx-theme') : null;
-    if (!btn || !api) return;
-
-    var key = btn.dataset.theme;
-    if (!key || key === api.get()) return;
-
-    api.set(key);
-
-    /* Sinkronkan ke settings: appearance jadi sumber kebenaran tunggal,
-       jadi pilihan di Settings ikut berubah dan sebaliknya. */
-    if (window.COFDE && COFDE.settings && typeof COFDE.settings.set === 'function') {
-      try { COFDE.settings.set({ appearance: key }); } catch (err) { /* abaikan */ }
-    }
-
-    drawer.querySelectorAll('.vx-theme').forEach(function (b) {
-      var on = b.dataset.theme === key;
-      b.classList.toggle('active', on);
-      b.setAttribute('aria-pressed', String(on));
-    });
-  });
 
   document.addEventListener('keydown', function (e) {
     if ((e.key === 'Escape' || e.key === 'Esc') && isOpen) close();

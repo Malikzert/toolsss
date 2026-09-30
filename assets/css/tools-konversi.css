@@ -1,0 +1,85 @@
+.tl-panel-konversi *{ margin: 0; padding: 0; box-sizing: border-box; }.tl-panel-konversi{
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }.tl-panel-konversi h1{ font-size: 1.75rem; color: #1a1a2e; margin-bottom: 0.5rem; }.tl-panel-konversi .subtitle{ color: #64748b; margin-bottom: 1.5rem; font-size: 0.9rem; }.tl-panel-konversi .conv-grid{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 900px;
+    }.tl-panel-konversi .conv-card{
+      background: white;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 0.75rem;
+      padding: 0.9rem 1rem;
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+      transition: 0.18s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }.tl-panel-konversi .conv-card:hover:not(:disabled){ border-color: #6366f1; background: #f8f8ff; transform: translateY(-2px); }.tl-panel-konversi .conv-card.active{ border-color: #6366f1; background: #eef2ff; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }.tl-panel-konversi .conv-card:disabled{ opacity: 0.45; cursor: not-allowed; }.tl-panel-konversi .conv-card .from{ font-size: 0.7rem; color: #94a3b8; letter-spacing: 0.06em; text-transform: uppercase; }.tl-panel-konversi .conv-card .arrow{ color: #6366f1; font-size: 0.8rem; }.tl-panel-konversi .conv-card .name{ font-weight: 600; color: #1e293b; font-size: 0.95rem; }.tl-panel-konversi .conv-card .note{ font-size: 0.75rem; color: #94a3b8; line-height: 1.4; }.tl-panel-konversi .upload-area{
+      background: white;
+      border: 2px dashed #cbd5e1;
+      border-radius: 1rem;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+      width: 100%;
+      max-width: 480px;
+      margin-top: 1.5rem;
+    }.tl-panel-konversi .upload-area:hover{ border-color: #6366f1; background: #f8f8ff; }.tl-panel-konversi .upload-area.has-file{ border-color: #22c55e; background: #f0fdf4; }.tl-panel-konversi .upload-area p{ color: #64748b; margin-top: 0.5rem; }.tl-panel-konversi .upload-area small{ color: #94a3b8; font-size: 0.8rem; }.tl-panel-konversi .upload-area input{ display: none; }.tl-panel-konversi .upload-icon{ font-size: 2.5rem; margin-bottom: 0.5rem; }.tl-panel-konversi .card{
+      background: white;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 900px;
+      margin-top: 1.5rem;
+    }.tl-panel-konversi .card-head{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }.tl-panel-konversi .filename{ font-weight: 600; color: #1e293b; }.tl-panel-konversi .toolbar{ display: flex; gap: 0.5rem; flex-wrap: wrap; }.tl-panel-konversi button.act{
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: white;
+      background: #1e293b;
+    }.tl-panel-konversi button.act.primary{ background: #6366f1; }.tl-panel-konversi button.act.success{ background: #22c55e; }.tl-panel-konversi button.act:disabled{ background: #cbd5e1; cursor: not-allowed; }.tl-panel-konversi .opt-row{ display: flex; gap: 1.25rem; flex-wrap: wrap; margin-bottom: 1rem; }.tl-panel-konversi .batch-toggle{ margin-bottom: 1rem; }.tl-panel-konversi .batch-switch{ display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: #475569; }.tl-panel-konversi .batch-switch input{ width: auto; }.tl-panel-konversi .batch-list{ display: flex; flex-direction: column; gap: 0.35rem; margin: 0.75rem 0; }.tl-panel-konversi .batch-item{
+      display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem;
+      border: 1px solid #e2e8f0; border-radius: 0.4rem; font-size: 0.82rem; background: #fff;
+    }.tl-panel-konversi .batch-item .bname{ flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.tl-panel-konversi .batch-item .bsize{ color: #94a3b8; font-size: 0.75rem; }.tl-panel-konversi .batch-item .bstat{ font-size: 0.75rem; font-weight: 600; }.tl-panel-konversi .batch-item .bstat.ok{ color: #16a34a; }.tl-panel-konversi .batch-item .bstat.err{ color: #dc2626; }.tl-panel-konversi .batch-item .bstat.wait{ color: #94a3b8; }.tl-panel-konversi .batch-item .bstat.run{ color: #6366f1; }.tl-panel-konversi .batch-progress{ margin-top: 0.75rem; }.tl-panel-konversi .progress-track{ height: 0.4rem; background: #e2e8f0; border-radius: 999px; overflow: hidden; }.tl-panel-konversi .progress-fill{ height: 100%; width: 0%; background: #6366f1; transition: width 0.2s; }.tl-panel-konversi #kv-batchStage{ position: absolute; left: -10000px; top: 0; width: 0; height: 0; overflow: hidden; }.tl-panel-konversi .opt-row label{ display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: #475569; }.tl-panel-konversi #kv-output{
+      width: 100%;
+      min-height: 260px;
+      max-height: 60vh;
+      overflow: auto;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.5rem;
+      padding: 0.85rem;
+      font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #1e293b;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #f8fafc;
+    }.tl-panel-konversi .loading{ text-align: center; color: #6366f1; padding: 2rem; }.tl-panel-konversi .error{ color: #ef4444; padding: 1rem; background: #fef2f2; border-radius: 0.5rem; }.tl-panel-konversi .meta{ font-size: 0.8rem; color: #94a3b8; margin-top: 0.75rem; }.tl-panel-konversi .hidden{ display: none !important; }.tl-panel-konversi #kv-previewArea .pdf-page{ width: 100%; margin-bottom: 1rem; }.tl-panel-konversi #kv-previewArea canvas{ width: 100% !important; height: auto !important; }.tl-panel-konversi /* Lembar sumber untuk DOCX -> PDF. Wajib override style.css (pakai !important)
+       agar hasil cetak tetap gelap di atas kertas putih,.tl-panel-konversi termasuk saat tema gelap. */
+    #pdfSource{ width: 794px; max-width: 100%; background: #fff; color: #111 !important; padding: 24px; margin: 0 auto; font-size: 12pt; line-height: 1.6; }.tl-panel-konversi #pdfSource h1,.tl-panel-konversi #pdfSource h2,.tl-panel-konversi #pdfSource h3,.tl-panel-konversi #pdfSource h4,.tl-panel-konversi #pdfSource h5,.tl-panel-konversi #pdfSource h6{ color: #111 !important; }.tl-panel-konversi #pdfSource p,.tl-panel-konversi #pdfSource li,.tl-panel-konversi #pdfSource td,.tl-panel-konversi #pdfSource th,.tl-panel-konversi #pdfSource blockquote,.tl-panel-konversi #pdfSource div{ color: #111 !important; }.tl-panel-konversi #pdfSource a{ color: #1d4ed8 !important; text-decoration: underline; }.tl-panel-konversi #pdfSource table{ border-collapse: collapse; width: 100%; margin: 12px 0; }.tl-panel-konversi #pdfSource td,.tl-panel-konversi #pdfSource th{ border: 1px solid #999 !important; padding: 6px 8px; text-align: left; }.tl-panel-konversi #pdfSource th{ background: #f0f0f0 !important; font-weight: 700; }.tl-panel-konversi #pdfSource img{ max-width: 100%; height: auto; }.tl-panel-konversi #pdfSource ul,.tl-panel-konversi #pdfSource ol{ padding-left: 24px; }.tl-panel-konversi #pdfSource blockquote{ border-left: 3px solid #ccc; padding-left: 12px; margin: 8px 0; }.tl-panel-konversi #pdfSource pre,.tl-panel-konversi #pdfSource code{ background: #f6f6f6 !important; color: #222 !important; }
+
+    @media (max-width: 768px) {
+.tl-panel-konversi .opt-row{ flex-direction: column; gap: 0.5rem; }
+}

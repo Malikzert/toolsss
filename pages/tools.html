@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studio Tools &mdash; COFDE Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/tools.css">
+  <link rel="stylesheet" href="../assets/css/tools-crop.css">
+  <link rel="stylesheet" href="../assets/css/tools-gabung.css">
+  <link rel="stylesheet" href="../assets/css/tools-konversi.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+</head>
+<body>
+<div class="cx-page">
+
+  <header class="cx-head">
+    <div>
+      <h1 class="cx-title">Studio Tools</h1>
+      <p class="cx-sub">Empat tool dalam satu halaman. Pilih kartunya, fiturnya langsung tampil di bawah.</p>
+    </div>
+    <span id="netBadge" class="cx-net"><span class="cx-net-dot"></span>Online</span>
+  </header>
+
+  <div class="tl-picker" role="tablist" aria-label="Pilih tool">
+    <button class="tl-card" role="tab" type="button" data-tool="crop"
+            id="tab-crop" aria-controls="panel-crop" aria-selected="true">
+      <span class="tl-card-num">02</span>
+      <span class="tl-card-name">Potong Gambar</span>
+      <span class="tl-card-desc">Potong screenshot panjang jadi beberapa bagian.</span>
+    </button>
+    <button class="tl-card" role="tab" type="button" data-tool="gabung"
+            id="tab-gabung" aria-controls="panel-gabung" aria-selected="false" tabindex="-1">
+      <span class="tl-card-num">03</span>
+      <span class="tl-card-name">Gabung ke PDF</span>
+      <span class="tl-card-desc">Gabung banyak gambar jadi satu PDF.</span>
+    </button>
+    <button class="tl-card" role="tab" type="button" data-tool="konversi"
+            id="tab-konversi" aria-controls="panel-konversi" aria-selected="false" tabindex="-1">
+      <span class="tl-card-num">04</span>
+      <span class="tl-card-name">Konversi</span>
+      <span class="tl-card-desc">PDF, Word, Markdown, dan teks.</span>
+    </button>
+    <button class="tl-card" role="tab" type="button" data-tool="devtools"
+            id="tab-devtools" aria-controls="panel-devtools" aria-selected="false" tabindex="-1">
+      <span class="tl-card-num">05</span>
+      <span class="tl-card-name">Dev Tools</span>
+      <span class="tl-card-desc">JSON, Base64, JWT, regex, dan lainnya.</span>
+    </button>
+  </div>
+
+  <!-- 02 · Potong Gambar -->
+  <section class="tl-panel tl-panel-crop" id="panel-crop" role="tabpanel"
+           aria-labelledby="tab-crop" tabindex="0">
+    <h1>Potong Gambar Panjang</h1>
+    <p class="subtitle">Upload screenshot, atur garis potong dengan drag, lalu download</p>
+
+    <div class="upload-area" id="cr-uploadArea">
+      <div class="upload-icon">&#128444;</div>
+      <p><strong>Klik untuk upload gambar</strong><br>atau drag &amp; drop file ke sini</p>
+      <input type="file" id="cr-fileInput" accept="image/*">
+    </div>
+
+    <div class="layout" id="cr-mainLayout" style="display:none;">
+      <div class="sidebar">
+        <h3>Pengaturan</h3>
+
+        <div class="mode-toggle" id="cr-modeToggle">
+          <button class="active" data-mode="parts">Per Bagian</button>
+          <button data-mode="height">Per Tinggi</button>
+          <button data-mode="custom">Kustom</button>
+        </div>
+
+        <div id="cr-partsMode">
+          <label>Jumlah Bagian</label>
+          <input type="number" id="cr-partsCount" value="3" min="2" max="50">
+        </div>
+
+        <div id="cr-heightMode" style="display:none;">
+          <label>Tinggi per Bagian (px)</label>
+          <input type="number" id="cr-partHeight" value="800" min="100" max="10000">
+        </div>
+
+        <div id="cr-customMode" style="display:none;">
+          <label>Klik pada gambar untuk tambah titik potong</label>
+        </div>
+
+        <label>Overlap (px)</label>
+        <input type="number" id="cr-overlap" value="0" min="0" max="500">
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="cr-keepOriginalSize">
+          <label for="cr-keepOriginalSize">Pertahankan ukuran asli (jangan diperkecil)</label>
+        </div>
+
+        <label>Format</label>
+        <select id="cr-format" class="cx-select">
+          <option value="png">PNG</option>
+          <option value="jpeg">JPEG</option>
+        </select>
+
+        <label>Rotasi &amp; Balik</label>
+        <div class="transform-row">
+          <button type="button" class="btn-transform" id="cr-rotLeftBtn" title="Putar kiri 90&deg;">&#8630;</button>
+          <button type="button" class="btn-transform" id="cr-rotRightBtn" title="Putar kanan 90&deg;">&#8631;</button>
+          <button type="button" class="btn-transform" id="cr-flipHBtn" title="Balik horizontal">&#8646;</button>
+          <button type="button" class="btn-transform" id="cr-flipVBtn" title="Balik vertikal">&#8647;</button>
+          <button type="button" class="btn-transform" id="cr-resetTransformBtn" title="Kembalikan orientasi">Reset</button>
+        </div>
+        <div class="transform-note" id="cr-transformNote">Normal</div>
+
+        <button class="btn-primary" id="cr-applyBtn" disabled>Potong &amp; Tampilkan</button>
+        <button class="btn-download" id="cr-downloadAllBtn" disabled>Download Semua (ZIP)</button>
+        <button class="btn-danger" id="cr-resetLinesBtn" style="display:none;">Reset Garis</button>
+
+        <div class="hint" id="cr-hintBar">
+          <strong>Drag</strong> garis merah untuk atur potongan<br>
+          <strong>Klik</strong> pada gambar untuk tambah garis<br>
+          <strong>Klik &times;</strong> pada garis untuk hapus
+        </div>
+      </div>
+
+      <div class="preview-area">
+        <div class="info">
+          <span id="cr-imageInfo">Belum ada gambar</span>
+          <span id="cr-splitInfo"></span>
+        </div>
+        <div class="image-container" id="cr-previewContainer">
+          <div class="empty-state" id="cr-emptyState">
+            <div style="font-size:3rem;text-align:center;padding:3rem;color:#94a3b8;">&#128444;<p style="margin-top:0.5rem;">Upload gambar untuk memulai</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="results" id="cr-resultsSection" style="display:none;">
+      <h3>Hasil Potongan</h3>
+      <div class="results-grid" id="cr-resultsGrid"></div>
+    </div>
+  </section>
+
+  <!-- 03 · Gabung ke PDF -->
+  <section class="tl-panel tl-panel-gabung" id="panel-gabung" role="tabpanel"
+           aria-labelledby="tab-gabung" tabindex="0" hidden>
+    <h1 style="font-size:1.75rem;margin-bottom:1.5rem;">Gabung Gambar ke PDF</h1>
+
+    <div class="upload-area" id="gb-uploadArea">
+      <div class="upload-icon">&#128444;</div>
+      <p><strong>Klik untuk upload gambar</strong><br>atau drag &amp; drop file ke sini</p>
+      <small>Format: PNG &bull; JPG &bull; JPEG</small>
+      <input type="file" id="gb-fileInput" accept=".png,.jpg,.jpeg" multiple>
+    </div>
+
+    <div class="layout" id="gb-mainLayout" style="display:none;">
+      <div class="sidebar">
+        <h3>Pengaturan PDF</h3>
+
+        <label>Ukuran Halaman</label>
+        <select id="gb-pageSize" class="cx-select">
+          <option value="a4">A4 (210 x 297 mm)</option>
+          <option value="letter">Letter (216 x 279 mm)</option>
+          <option value="legal">Legal (216 x 356 mm)</option>
+          <option value="a3">A3 (297 x 420 mm)</option>
+        </select>
+
+        <label>Orientasi</label>
+        <div class="row">
+          <select id="gb-orientation" class="cx-select">
+            <option value="portrait">Potret</option>
+            <option value="landscape">Lanskap</option>
+          </select>
+        </div>
+
+        <label>Margin (px)</label>
+        <input type="number" id="gb-margin" value="20" min="0" max="100">
+
+        <label>Skala Gambar</label>
+        <select id="gb-fitMode" class="cx-select">
+          <option value="fit">Sesuai halaman</option>
+          <option value="width">Sesuai lebar</option>
+          <option value="original">Ukuran asli</option>
+        </select>
+
+        <label>Watermark Teks (opsional)</label>
+        <input type="text" id="gb-wmText" placeholder="Contoh: DRAF" spellcheck="false">
+
+        <label>Opasitas Watermark: <span id="gb-wmOpacityVal">15</span>%</label>
+        <input type="range" id="gb-wmOpacity" min="5" max="80" value="15" style="margin-bottom:1rem;padding:0;">
+
+        <label>Kualitas Kompresi: <span id="gb-jpegQualityVal">85</span>%</label>
+        <input type="range" id="gb-jpegQuality" min="40" max="100" value="85" style="margin-bottom:0.35rem;padding:0;">
+        <div class="tl-note">
+          JPEG di bawah 100% mengurangi ukuran PDF. PNG diabaikan.
+        </div>
+
+        <button class="btn-primary" id="gb-convertBtn" disabled>Buat PDF</button>
+        <button class="btn-success" id="gb-downloadPdfBtn" style="display:none;">Download PDF</button>
+
+        <div class="tl-tips">
+          <strong>Tips:</strong><br>
+          Gunakan tombol &#8593; &#8595; untuk mengurutkan gambar<br>
+          Klik tong sampah untuk hapus gambar
+        </div>
+      </div>
+
+      <div class="main-area">
+        <div class="info-bar">
+          <span class="count" id="gb-imageCount">0 gambar</span>
+          <span id="gb-totalSize">0 KB</span>
+        </div>
+
+        <div class="image-list" id="gb-imageList">
+          <div class="empty-state">
+            &#128444;
+            <p>Upload gambar untuk memulai</p>
+          </div>
+        </div>
+
+        <div class="add-more" id="gb-addMoreBtn" style="display:none;margin-top:0.75rem;">
+          + Tambah gambar lagi
+          <input type="file" accept=".png,.jpg,.jpeg" multiple>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress-container" id="gb-progressContainer" style="display:none;">
+      <div class="progress-bar" id="gb-progressBar">
+        <div class="fill" id="gb-progressFill"></div>
+      </div>
+      <div class="progress-text" id="gb-progressText">Memproses...</div>
+    </div>
+  </section>
+
+  <!-- 04 · Konversi -->
+  <section class="tl-panel tl-panel-konversi" id="panel-konversi" role="tabpanel"
+           aria-labelledby="tab-konversi" tabindex="0" hidden>
+    <h1>Konversi Dokumen</h1>
+    <p class="subtitle">PDF &harr; Word &harr; Markdown &harr; Teks &mdash; semua diproses di browser, file tidak diunggah</p>
+
+    <div class="conv-grid" id="kv-convGrid"></div>
+
+    <div class="upload-area" id="kv-uploadArea">
+      <div class="upload-icon">&#128196;</div>
+      <p><strong>Klik untuk upload file</strong><br>atau drag &amp; drop file ke sini</p>
+      <small id="kv-uploadHint">Pilih mode konversi dulu</small>
+      <input type="file" id="kv-fileInput">
+    </div>
+
+    <div class="batch-toggle hidden" id="kv-batchToggleWrap">
+      <label class="batch-switch">
+        <input type="checkbox" id="kv-batchToggle">
+        <span>Mode Batch &mdash; konversi banyak file sekaligus, hasilnya satu ZIP</span>
+      </label>
+    </div>
+
+    <div id="kv-batchPanel" class="card hidden">
+      <div class="card-head">
+        <div class="filename" id="kv-batchName">&mdash;</div>
+        <div class="toolbar">
+          <button class="act primary" id="kv-batchRunBtn">Konversi Semua</button>
+          <button class="act success" id="kv-batchDownloadBtn" disabled>Download ZIP</button>
+          <button class="act" id="kv-batchResetBtn">Ganti File</button>
+        </div>
+      </div>
+      <div id="kv-batchList" class="batch-list"></div>
+      <div class="batch-progress hidden" id="kv-batchProgressWrap">
+        <div class="progress-track"><div class="progress-fill" id="kv-batchProgressFill"></div></div>
+        <div class="meta" id="kv-batchProgressText"></div>
+      </div>
+      <div class="meta" id="kv-batchSummary"></div>
+    </div>
+
+    <div id="kv-batchStage" aria-hidden="true"></div>
+
+    <div id="kv-panel" class="card hidden">
+      <div class="card-head">
+        <div class="filename" id="kv-panelName">&mdash;</div>
+        <div class="toolbar">
+          <button class="act primary" id="kv-runBtn">Konversi</button>
+          <button class="act success" id="kv-downloadBtn" disabled>Download</button>
+          <button class="act" id="kv-copyBtn" disabled>Salin Teks</button>
+          <button class="act" id="kv-resetBtn">Ganti File</button>
+        </div>
+      </div>
+      <div class="opt-row hidden" id="kv-optRow"></div>
+      <div id="kv-output"></div>
+      <div class="meta" id="kv-panelMeta"></div>
+    </div>
+
+    <div id="kv-previewArea" class="card hidden"></div>
+  </section>
+
+  <!-- 05 · Dev Tools -->
+  <section class="tl-panel tl-panel-devtools cx-cols" id="panel-devtools" role="tabpanel"
+           aria-labelledby="tab-devtools" tabindex="0" hidden>
+
+    <p class="cx-note">
+      Tempel kode atau teks ke kolom mana pun. Teks diproses sepenuhnya di browser, tidak ada yang dikirim ke server.
+    </p>
+
+    <!-- JSON -->
+    <section class="cx-card" id="t-json">
+      <h2 class="cx-card-title">JSON Formatter</h2>
+      <div class="cx-row">
+        <label class="cx-field">
+          <span class="cx-label">Indentasi</span>
+          <select id="jsonIndent" class="cx-select">
+            <option value="2">2 spasi</option>
+            <option value="4">4 spasi</option>
+            <option value="tab">Tab</option>
+          </select>
+        </label>
+        <div class="cx-field cx-right">
+          <span class="cx-label">&nbsp;</span>
+          <div class="cx-actions">
+            <button class="cx-btn cx-btn-primary" id="jsonFormat">Format</button>
+            <button class="cx-btn" id="jsonMinify">Minify</button>
+            <button class="cx-btn" id="jsonToCsv">JSON ke CSV</button>
+            <button class="cx-btn" id="jsonCopy">Salin</button>
+          </div>
+        </div>
+      </div>
+      <label class="cx-field">
+        <span class="cx-label">Input JSON</span>
+        <textarea id="jsonIn" class="cx-textarea" rows="7" spellcheck="false" placeholder='{"nama":"Budi","umur":30}'></textarea>
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Hasil</span>
+        <textarea id="jsonOut" class="cx-textarea" rows="9" spellcheck="false" readonly></textarea>
+      </label>
+      <p class="cx-note" id="jsonStatus"></p>
+    </section>
+
+    <!-- Base64 -->
+    <section class="cx-card" id="t-base64">
+      <h2 class="cx-card-title">Base64</h2>
+      <div class="cx-row">
+        <div class="cx-field cx-right">
+          <span class="cx-label">&nbsp;</span>
+          <div class="cx-actions">
+            <button class="cx-btn cx-btn-primary" id="b64Encode">Encode</button>
+            <button class="cx-btn" id="b64Decode">Decode</button>
+            <button class="cx-btn" id="b64Copy">Salin hasil</button>
+          </div>
+        </div>
+      </div>
+      <label class="cx-field">
+        <span class="cx-label">Teks biasa / Base64</span>
+        <textarea id="b64In" class="cx-textarea" rows="6" spellcheck="false" placeholder="Teks atau Base64, keduanya aman untuk karakter Unicode."></textarea>
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Hasil</span>
+        <textarea id="b64Out" class="cx-textarea" rows="6" spellcheck="false" readonly></textarea>
+      </label>
+    </section>
+
+    <!-- URL -->
+    <section class="cx-card" id="t-url">
+      <h2 class="cx-card-title">URL Encode / Decode / Parse</h2>
+      <label class="cx-field">
+        <span class="cx-label">URL atau teks</span>
+        <input type="text" id="urlIn" class="cx-input" spellcheck="false" placeholder="https://contoh.com/path?a=1&amp;b=2#bagian">
+      </label>
+      <div class="cx-actions">
+        <button class="cx-btn cx-btn-primary" id="urlEncode">Encode komponen</button>
+        <button class="cx-btn" id="urlDecode">Decode komponen</button>
+        <button class="cx-btn" id="urlParse">Parse</button>
+        <button class="cx-btn" id="urlCopy">Salin hasil</button>
+      </div>
+      <label class="cx-field">
+        <span class="cx-label">Hasil</span>
+        <textarea id="urlOut" class="cx-textarea" rows="8" spellcheck="false" readonly></textarea>
+      </label>
+    </section>
+
+    <!-- JWT -->
+    <section class="cx-card" id="t-jwt">
+      <h2 class="cx-card-title">JWT Decode</h2>
+      <p class="cx-note">
+        Tool ini hanya membaca isi token. Tanda tangan <span class="cx-mono">TIDAK</span> diverifikasi,
+        jadi token yang valid-looking belum tentu sah.
+      </p>
+      <label class="cx-field">
+        <span class="cx-label">Token JWT</span>
+        <textarea id="jwtIn" class="cx-textarea" rows="4" spellcheck="false" placeholder="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.xxxxx"></textarea>
+      </label>
+      <div class="cx-actions">
+        <button class="cx-btn cx-btn-primary" id="jwtRun">Decode</button>
+        <button class="cx-btn" id="jwtPaste">Tempel contoh</button>
+      </div>
+      <div id="jwtOut" class="cx-hidden"></div>
+    </section>
+
+    <!-- UUID -->
+    <section class="cx-card" id="t-uuid">
+      <h2 class="cx-card-title">UUID Generator</h2>
+      <div class="cx-row">
+        <label class="cx-field">
+          <span class="cx-label">Jumlah</span>
+          <input type="number" id="uuidCount" class="cx-input" value="5" min="1" max="1000">
+        </label>
+        <div class="cx-field cx-right">
+          <span class="cx-label">&nbsp;</span>
+          <div class="cx-actions">
+            <button class="cx-btn cx-btn-primary" id="uuidRun">Buat</button>
+            <button class="cx-btn" id="uuidCopy">Salin semua</button>
+          </div>
+        </div>
+      </div>
+      <textarea id="uuidOut" class="cx-textarea" rows="8" spellcheck="false" readonly></textarea>
+    </section>
+
+    <!-- Regex -->
+    <section class="cx-card" id="t-regex">
+      <h2 class="cx-card-title">Regex Tester</h2>
+      <div class="cx-row">
+        <label class="cx-field">
+          <span class="cx-label">Pola</span>
+          <input type="text" id="rePattern" class="cx-input" spellcheck="false" placeholder="\d+">
+        </label>
+        <label class="cx-field">
+          <span class="cx-label">Flag</span>
+          <input type="text" id="reFlags" class="cx-input" spellcheck="false" value="g" placeholder="gim">
+        </label>
+      </div>
+      <div class="cx-chip-list" id="rePresets"></div>
+      <label class="cx-field">
+        <span class="cx-label">Teks uji</span>
+        <textarea id="reText" class="cx-textarea" rows="5" spellcheck="false" placeholder="Tempel teks untuk diuji"></textarea>
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Ganti dengan (opsional)</span>
+        <input type="text" id="reReplace" class="cx-input" spellcheck="false" placeholder="kosongkan bila tidak ingin mengganti">
+      </label>
+      <div class="cx-actions">
+        <button class="cx-btn cx-btn-primary" id="reRun">Uji</button>
+        <button class="cx-btn" id="reCopy">Salin hasil</button>
+      </div>
+      <p class="cx-note" id="reStatus"></p>
+      <div class="cx-table-wrap cx-hidden" id="reTableWrap">
+        <table class="cx-table">
+          <thead><tr><th>#</th><th>Posisi</th><th>Teks cocok</th><th>Grup tangkapan</th></tr></thead>
+          <tbody id="reTable"></tbody>
+        </table>
+      </div>
+      <label class="cx-field cx-hidden" id="reOutWrap">
+        <span class="cx-label">Hasil penggantian</span>
+        <textarea id="reOut" class="cx-textarea" rows="4" spellcheck="false" readonly></textarea>
+      </label>
+    </section>
+
+    <!-- Hash -->
+    <section class="cx-card" id="t-hash">
+      <h2 class="cx-card-title">Hash (SHA-256 / 384 / 512)</h2>
+      <p class="cx-note">Dijalankan lewat Web Crypto, jadi butuh halaman dibuka lewat <span class="cx-mono">https</span> atau <span class="cx-mono">localhost</span>.</p>
+      <label class="cx-field">
+        <span class="cx-label">Teks</span>
+        <textarea id="hashIn" class="cx-textarea" rows="4" spellcheck="false" placeholder="Teks untuk di-hash"></textarea>
+      </label>
+      <div class="cx-actions">
+        <button class="cx-btn cx-btn-primary" id="hashRun">Hitung</button>
+        <button class="cx-btn" id="hashCopy">Salin semua</button>
+      </div>
+      <div id="hashOut" class="cx-mono cx-note"></div>
+    </section>
+
+    <!-- Timestamp -->
+    <section class="cx-card" id="t-time">
+      <h2 class="cx-card-title">Timestamp</h2>
+      <div class="cx-actions">
+        <button class="cx-btn cx-btn-primary" id="timeNow">Waktu sekarang</button>
+        <button class="cx-btn" id="timeToIso">Epoch ke ISO</button>
+        <button class="cx-btn" id="timeToEpoch">ISO ke Epoch</button>
+        <button class="cx-btn" id="timeCopy">Salin hasil</button>
+      </div>
+      <div class="cx-stats" id="timeStats"></div>
+      <div class="cx-row">
+        <label class="cx-field">
+          <span class="cx-label">Nilai (epoch atau ISO)</span>
+          <input type="text" id="timeIn" class="cx-input" spellcheck="false" placeholder="1700000000 atau 2026-09-30T00:00:00Z">
+        </label>
+        <label class="cx-field">
+          <span class="cx-label">Selisih waktu (ms)</span>
+          <input type="text" id="timeMs" class="cx-input" inputmode="numeric" placeholder="3600000">
+        </label>
+      </div>
+      <p class="cx-note" id="timeNote"></p>
+    </section>
+
+    <!-- Color -->
+    <section class="cx-card" id="t-color">
+      <h2 class="cx-card-title">Color Picker &amp; Kontras WCAG</h2>
+      <div class="cx-row">
+        <label class="cx-field">
+          <span class="cx-label">Warna</span>
+          <input type="text" id="colorIn" class="cx-input" spellcheck="false" value="#ff4655" placeholder="#ff4655, rgb(), hsl()">
+        </label>
+        <label class="cx-field">
+          <span class="cx-label">Warna pembanding</span>
+          <input type="text" id="colorIn2" class="cx-input" spellcheck="false" value="#ffffff" placeholder="#000000">
+        </label>
+      </div>
+      <div class="cx-actions">
+        <input type="color" id="colorPicker" class="cx-input" style="width:60px" aria-label="Pilih warna">
+        <button class="cx-btn cx-btn-primary" id="colorRun">Hitung</button>
+        <button class="cx-btn" id="colorCopy">Salin semua</button>
+      </div>
+      <div id="colorOut"></div>
+    </section>
+
+    <!-- Cron -->
+    <section class="cx-card" id="t-cron">
+      <h2 class="cx-card-title">Cron Expression Parser</h2>
+      <p class="cx-note">Format 5 field: <span class="cx-mono">menit jam tanggal bulan hari</span>. Menghitung waktu berjalan berikutnya secara lokal.</p>
+      <div class="cx-row">
+        <label class="cx-field">
+          <span class="cx-label">Ekspresi</span>
+          <input type="text" id="cronIn" class="cx-input" spellcheck="false" value="0 9 * * 1-5" placeholder="*/15 * * * *">
+        </label>
+        <div class="cx-field cx-right">
+          <span class="cx-label">&nbsp;</span>
+          <div class="cx-actions">
+            <button class="cx-btn cx-btn-primary" id="cronRun">Parse</button>
+          </div>
+        </div>
+      </div>
+      <div class="cx-chip-list" id="cronPresets"></div>
+      <p class="cx-note" id="cronStatus"></p>
+      <div class="cx-table-wrap cx-hidden" id="cronTableWrap">
+        <table class="cx-table">
+          <thead><tr><th>#</th><th>Waktu berikutnya</th></tr></thead>
+          <tbody id="cronTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Markdown -->
+    <section class="cx-card" id="t-markdown">
+      <h2 class="cx-card-title">Markdown Preview</h2>
+      <p class="cx-note">Input di-escape lebih dulu, jadi HTML yang kamu tempel tidak akan dieksekusi.</p>
+      <label class="cx-field">
+        <span class="cx-label">Markdown</span>
+        <textarea id="mdIn" class="cx-textarea" rows="8" spellcheck="false" placeholder="# Judul&#10;&#10;- daftar&#10;- item&#10;&#10;**tebal** dan *miring*"></textarea>
+      </label>
+      <div class="cx-actions">
+        <button class="cx-btn cx-btn-primary" id="mdRun">Pratinjau</button>
+        <button class="cx-btn" id="mdHtml">Lihat HTML</button>
+        <button class="cx-btn" id="mdText">Teks polos</button>
+      </div>
+      <div id="mdOut" class="cx-journal cx-note"></div>
+    </section>
+
+    <!-- SQL -->
+    <section class="cx-card" id="t-sql">
+      <h2 class="cx-card-title">SQL Formatter</h2>
+      <p class="cx-note">Hanya memformat teks SQL. Tool ini tidak pernah terhubung ke database dan tidak menjalankan kueri.</p>
+      <label class="cx-field">
+        <span class="cx-label">SQL</span>
+        <textarea id="sqlIn" class="cx-textarea" rows="6" spellcheck="false" placeholder="select id,nama from users where aktif=1 order by nama"></textarea>
+      </label>
+      <div class="cx-actions">
+        <button class="cx-btn cx-btn-primary" id="sqlRun">Format</button>
+        <button class="cx-btn" id="sqlCopy">Salin hasil</button>
+      </div>
+      <label class="cx-field">
+        <span class="cx-label">Hasil</span>
+        <textarea id="sqlOut" class="cx-textarea" rows="10" spellcheck="false" readonly></textarea>
+      </label>
+      <div id="sqlChecks"></div>
+    </section>
+
+  </section>
+
+</div>
+
+<script src="../assets/js/toast.js"></script>
+<script src="../assets/js/guard.js"></script>
+<script src="../assets/js/fmt.js"></script>
+<script src="../assets/js/settings.js"></script>
+<script src="../assets/js/net.js"></script>
+<script src="../assets/js/cmdpal.js"></script>
+<script src="../assets/js/devtools.js"></script>
+<script src="../assets/js/tools-crop.js"></script>
+<script src="../assets/js/tools-gabung.js"></script>
+<script src="../assets/js/tools-konversi.js"></script>
+<script src="../assets/js/particles.js"></script>
+<script src="../assets/js/drawer.js"></script>
+<script src="../assets/js/dropdown.js"></script>
+<script src="../assets/js/shortcuts.js"></script>
+<script src="../assets/js/sw-register.js"></script>
+<script src="../assets/js/devtools-page.js"></script>
+<script src="../assets/js/tools-page.js"></script>
+</body>
+</html>

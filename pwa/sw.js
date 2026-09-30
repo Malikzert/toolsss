@@ -4,7 +4,7 @@
      - CDN libraries (cross origin): cache-first, they are version-pinned URLs
      - navigations: network first, fall back to cached index.html
 */
-var VERSION = 'cofde-v12';
+var VERSION = 'cofde-v14';
 var SHELL_CACHE = VERSION + '-shell';
 var CDN_CACHE = VERSION + '-cdn';
 
@@ -13,6 +13,10 @@ var SHELL = [
   '../index.html',
   '../pages/dashboard.html',
   '../pages/reader.html',
+  '../pages/tools.html',
+  '../pages/listdiff.html',
+  '../pages/timer.html',
+  '../pages/random.html',
   '../pages/crop.html',
   '../pages/gabung.html',
   '../pages/merge.html',
@@ -23,15 +27,29 @@ var SHELL = [
   '../pages/maps.html',
   '../pages/mlcsv.html',
   '../assets/css/style.css',
+  '../assets/css/tools.css',
+  '../assets/css/tools-crop.css',
+  '../assets/css/tools-gabung.css',
+  '../assets/css/tools-konversi.css',
+  '../assets/css/listdiff.css',
+  '../assets/css/timer.css',
+  '../assets/css/picker.css',
   '../assets/js/drawer.js',
   '../assets/js/dropdown.js',
   '../assets/js/particles.js',
   '../assets/js/sw-register.js',
   '../assets/js/shortcuts.js',
+  '../assets/js/tools-page.js',
+  '../assets/js/tools-crop.js',
+  '../assets/js/tools-gabung.js',
+  '../assets/js/tools-konversi.js',
   '../assets/js/devtools-page.js',
   '../assets/js/qr-page.js',
   '../assets/js/maps-page.js',
   '../assets/js/mlcsv-page.js',
+  '../assets/js/listdiff-page.js',
+  '../assets/js/timer-page.js',
+  '../assets/js/random-page.js',
   './manifest.webmanifest',
   './icons/icon.svg',
   './icons/icon-192.png',

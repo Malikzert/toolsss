@@ -32,7 +32,22 @@
         <option value="system">System (ikuti perangkat)</option>
       </select>
     </label>
-    <p class="cx-note">Pilih tema yang sama dengan chip di menu. Perubahan di sini dan di chip sidebar langsung saling menyesuaikan di semua fitur.</p>
+    <div class="cx-label" style="margin-top:0.9rem">Pratinjau tema</div>
+    <div class="cx-theme-grid" role="group" aria-label="Pilih tema">
+      <button type="button" class="cx-theme-card" data-theme="lightholy" aria-pressed="false">
+        <span class="cx-theme-swatch" style="background:linear-gradient(90deg,#fff6e2,#ffc46b)"></span>
+        <span class="cx-theme-name">Lightholy</span>
+      </button>
+      <button type="button" class="cx-theme-card" data-theme="darkside" aria-pressed="false">
+        <span class="cx-theme-swatch" style="background:linear-gradient(90deg,#0f1923,#ff4655)"></span>
+        <span class="cx-theme-name">Darkside</span>
+      </button>
+      <button type="button" class="cx-theme-card" data-theme="abyss" aria-pressed="false">
+        <span class="cx-theme-swatch" style="background:linear-gradient(90deg,#04070f,#2ee6d6)"></span>
+        <span class="cx-theme-name">Abyss</span>
+      </button>
+    </div>
+    <p class="cx-note">Ini satu-satunya tempat mengubah tema. Dropdown dan kartu di atas saling menyesuaikan, lalu berlaku di semua fitur.</p>
   </section>
 
   <section class="cx-card">
@@ -137,6 +152,18 @@
   var curSymbol = $('curSymbol');
   var customBox = $('customBox');
   var dateFormat = $('dateFormat');
+  var themeCards = document.querySelectorAll('.cx-theme-card');
+
+  /* Kartu tema memakai nama tema yang sama dengan nilai appearance.
+     Mode 'system' tidak punya kartu karena tampilannya ikut OS. */
+  function paintThemeCards(resolved) {
+    themeCards.forEach(function (b) {
+      var on = b.dataset.theme === resolved;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+  }
+
 
   function paint() {
     var s = COFDE.settings.get();
@@ -147,6 +174,7 @@
     else if (ap === 'dark') ap = 'darkside';
     if (['lightholy', 'darkside', 'abyss', 'system'].indexOf(ap) < 0) ap = 'system';
     appearance.value = ap;
+    paintThemeCards(COFDE.settings.resolvedTheme());
     currency.value = s.currency;
     curCode.value = s.customCurrencyCode || '';
     curSymbol.value = s.customCurrencySymbol || '';
@@ -160,8 +188,21 @@
 
   appearance.addEventListener('change', function () {
     COFDE.settings.set({ appearance: this.value });
+    paintThemeCards(COFDE.settings.resolvedTheme());
     COFDE.toast.success('Tema diubah.');
   });
+
+  themeCards.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var key = b.dataset.theme;
+      if (!key) return;
+      appearance.value = key;
+      COFDE.settings.set({ appearance: key });
+      paintThemeCards(COFDE.settings.resolvedTheme());
+      COFDE.toast.success('Tema diubah ke ' + key + '.');
+    });
+  });
+
 
   function commitCurrency() {
     var patch = { currency: currency.value };
@@ -280,7 +321,7 @@
     if (window.COFDE_SHORTCUT_HELP) COFDE_SHORTCUT_HELP();
   });
 
-  /* Ikuti perubahan tema dari halaman lain (mis. lewat drawer). */
+  /* Ikuti perubahan tema dari halaman lain (mis. lewat import settings). */
   COFDE.settings.onChange(paint);
   paint();
   refreshStorage();

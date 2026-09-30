@@ -8,16 +8,16 @@
   var PAGES = [
     { href: 'dashboard.html', label: 'Dashboard' },
     { href: 'reader.html',    label: 'Dokumen Reader' },
-    { href: 'crop.html',      label: 'Potong Gambar' },
-    { href: 'gabung.html',    label: 'Gabung ke PDF' },
+    { href: 'tools.html',     label: 'Studio Tools' },
+    { href: 'listdiff.html',  label: 'List Diff' },
+    { href: 'timer.html',     label: 'Timer' },
+    { href: 'random.html',    label: 'Random Picker' },
     { href: 'merge.html',     label: 'Merge PDF' },
     { href: 'split.html',     label: 'Split PDF' },
-    { href: 'konversi.html',  label: 'Konversi' },
     { href: 'expense.html',   label: 'Expense Tracker' },
     { href: 'maps.html',      label: 'Maps' },
     { href: 'qr.html',        label: 'QR Code Tools' },
     { href: 'mlcsv.html',     label: 'ML CSV Visualizer' },
-    { href: 'devtools.html',  label: 'Developer Tools' },
     { href: 'settings.html',  label: 'Settings' }
   ];
 
@@ -33,7 +33,7 @@
     enter: function () { click('#applyBtn'); }
   };
 
-  var THEMES = ['lightholy', 'darkside', 'abyss'];
+  /* Siklus tema dihapus: tema hanya bisa diubah lewat Settings. */
 
   function click(sel) {
     var el = document.querySelector(sel);
@@ -59,31 +59,6 @@
 
   function currentPage() {
     return location.pathname.split('/').pop() || 'dashboard.html';
-  }
-
-  function cycleTheme(dir) {
-    var api = window.COFDE_THEME;
-    if (!api || !api.get || !api.set) return;
-    var keys = Object.keys(api.themes || {}).length
-      ? Object.keys(api.themes)
-      : THEMES;
-    var i = keys.indexOf(api.get());
-    if (i < 0) i = 0;
-    var next = keys[(i + dir + keys.length) % keys.length];
-    api.set(next);
-
-    /* Sinkronkan ke settings supaya pilihan tema di Settings dan chip
-       di drawer selalu sama. */
-    if (window.COFDE && COFDE.settings && typeof COFDE.settings.set === 'function') {
-      try { COFDE.settings.set({ appearance: next }); } catch (e) { /* abaikan */ }
-    }
-
-    /* sinkronkan tombol tema di drawer bila sedang terbuka */
-    document.querySelectorAll('.vx-theme').forEach(function (b) {
-      var on = b.dataset.theme === next;
-      b.classList.toggle('active', on);
-      b.setAttribute('aria-pressed', String(on));
-    });
   }
 
   function go(delta) {
@@ -121,9 +96,6 @@
     if (k === '[') { e.preventDefault(); go(-1); return; }
     if (k === ']') { e.preventDefault(); go(1); return; }
 
-    if (k === 't' || k === 'T') { e.preventDefault(); cycleTheme(1); return; }
-    if (k === 'y' || k === 'Y') { e.preventDefault(); cycleTheme(-1); return; }
-
     /* Enter dipetakan ke aksi utama, jadi harus dicek sebelum filter
        "satu huruf" di bawah. */
     if (k === 'Enter' || k === 'Return') {
@@ -151,7 +123,6 @@
     var rows = [
       ['[  /  ]', 'Halaman tool sebelumnya / berikutnya'],
       ['Ctrl + K', 'Pencarian global (semua tool)'],
-      ['T  /  Y', 'Ganti tema maju / mundur'],
       ['D', 'Pilih file (area upload)'],
       ['O', 'Buka dialog berkas'],
       ['Enter', 'Jalankan aksi utama'],
