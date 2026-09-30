@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dokumen Reader</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -162,58 +166,96 @@
        ══════════════════════════════════════════════ */
     const search = {
       pdf: null,
-      pageTexts: [],      // per page: array of { str, x, y, w, h, transform }
+      pageTexts: [],      // per page: array of { str, x, y, w, h, start, end }
+      pageJoined: [],     // per page: all item text joined, for cross-item phrases
+      pageWidths: [],     // per page: true viewport width, for highlight scaling
       query: '',
       caseSensitive: false,
-      hits: [],           // { page, markEl }
+      hits: [],           // { page, x, y, w, h }
       current: -1,
     };
 
     async function indexPages(pdf, totalPages) {
       search.pageTexts = new Array(totalPages);
+      search.pageWidths = new Array(totalPages);
       for (let i = 1; i <= totalPages; i++) {
         try {
           const page = await pdf.getPage(i);
           const tc = await page.getTextContent();
           const vp = page.getViewport({ scale: 1 });
-          search.pageTexts[i - 1] = tc.items.map(function (it) {
+          /* Lebar viewport asli, bukan max(x+w): tepi kanan teks hampir
+             tidak pernah menyentuh batas halaman, dan memakai max() membuat
+             posisi highlight bergeser. */
+          search.pageWidths[i - 1] = vp.width;
+          const items = [];
+          let cursor = 0;
+          for (const it of tc.items) {
+            if (!it.str || it.str.trim().length === 0) {
+              /* item kosong tetap Advance cursor agar frasa tidak terpotong
+                 oleh whitespace yang tidak dirender */
+              cursor += it.str ? it.str.length : 0;
+              continue;
+            }
             const tr = it.transform;
             const h = Math.hypot(tr[2], tr[3]) || 10;
             const x = tr[4];
             const y = vp.height - tr[5] - h;
-            return {
+            items.push({
               str: it.str,
               x: x, y: y, w: it.width || 0, h: h,
               fontHeight: h,
-            };
-          }).filter(function (t) { return t.str.trim().length > 0; });
+              start: cursor,
+              end: cursor + it.str.length,
+            });
+            cursor += it.str.length;
+          }
+          /* satu string gabungan per halaman supaya frasa yang terpotong
+             di beberapa text item tetap bisa ditemukan */
+          search.pageTexts[i - 1] = items;
+          search.pageJoined[i - 1] = items.map(function (t) { return t.str; }).join('');
         } catch (e) {
           search.pageTexts[i - 1] = [];
+          search.pageJoined[i - 1] = '';
         }
       }
     }
 
+    /* Menemukan kemunculan `q` di seluruh teks halaman, lalu memetakannya
+       kembali ke text item dan koordinat untuk penandaan. */
     function findInPage(pageIdx) {
       const items = search.pageTexts[pageIdx] || [];
+      const joined = search.pageJoined[pageIdx] || '';
       const q = search.caseSensitive ? search.query : search.query.toLowerCase();
+      const hay = search.caseSensitive ? joined : joined.toLowerCase();
       const results = [];
-      if (!q) return results;
-      for (let i = 0; i < items.length; i++) {
-        const s = search.caseSensitive ? items[i].str : items[i].str.toLowerCase();
-        let idx = s.indexOf(q);
-        while (idx !== -1) {
-          const rel = idx / Math.max(1, items[i].str.length);
+      if (!q || !hay) return results;
+
+      let from = 0;
+      for (;;) {
+        const idx = hay.indexOf(q, from);
+        if (idx === -1) break;
+        from = idx + 1;
+        const end = idx + q.length;
+
+        for (const t of items) {
+          /* hanya item yang benar-benar beririsan dengan rentang kecocokan */
+          if (t.end <= idx || t.start >= end) continue;
+
+          const localStart = Math.max(idx, t.start) - t.start;
+          const localEnd = Math.min(end, t.end) - t.start;
+          const n = Math.max(1, t.str.length);
+          const x0 = t.x + t.w * (localStart / n);
+          const w = t.w * ((localEnd - localStart) / n);
           results.push({
             page: pageIdx + 1,
-            item: i,
-            start: idx,
-            len: q.length,
-            x: items[i].x + items[i].w * rel,
-            y: items[i].y,
-            h: items[i].h,
-            w: items[i].w * (q.length / Math.max(1, items[i].str.length)),
+            item: items.indexOf(t),
+            start: localStart,
+            len: localEnd - localStart,
+            x: x0,
+            y: t.y,
+            h: t.h,
+            w: Math.max(2, w),
           });
-          idx = s.indexOf(q, idx + 1);
         }
       }
       return results;
@@ -269,8 +311,10 @@
       const canvas = host.parentElement ? host.parentElement.querySelector('canvas') : null;
       if (!canvas) return;
 
-      // items are in unscaled PDF page space (viewport scale 1)
-      const pageW = items.reduce(function (m, t) { return Math.max(m, t.x + t.w); }, 0) || 1;
+      /* Skala memakai lebar viewport asli halaman. max(x+w) selalu lebih
+         kecil dari lebar halaman, sehingga highlight akan bergeser ke kanan
+         pada teks yang tidak menyentuh tepi kanan. */
+      const pageW = search.pageWidths[pageNum - 1] || 1;
       const dispW = canvas.clientWidth || canvas.width;
       const k = dispW / pageW;
 
@@ -357,6 +401,9 @@
       let currentPage = 1;
 
       search.pdf = pdf;
+      search.pageTexts = [];
+      search.pageJoined = [];
+      search.pageWidths = [];
       const idx = document.createElement('div');
       idx.style.cssText = 'font-size:0.8rem;color:#94a3b8;margin-bottom:0.5rem;';
       idx.textContent = 'Membangun indeks pencarian...';
@@ -658,6 +705,7 @@
   </script>
   <script src="../assets/js/particles.js"></script>
   <script src="../assets/js/drawer.js"></script>
+  <script src="../assets/js/shortcuts.js"></script>
   <script src="../assets/js/sw-register.js"></script>
 </body>
 </html>
