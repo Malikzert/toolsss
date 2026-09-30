@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gabung Gambar ke PDF</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -233,6 +237,18 @@
         <option value="original">Ukuran asli</option>
       </select>
 
+      <label>Watermark Teks (opsional)</label>
+      <input type="text" id="wmText" placeholder="Contoh: DRAF" spellcheck="false">
+
+      <label>Opasitas Watermark: <span id="wmOpacityVal">15</span>%</label>
+      <input type="range" id="wmOpacity" min="5" max="80" value="15" style="margin-bottom:1rem;padding:0;">
+
+      <label>Kualitas Kompresi: <span id="jpegQualityVal">85</span>%</label>
+      <input type="range" id="jpegQuality" min="40" max="100" value="85" style="margin-bottom:0.35rem;padding:0;">
+      <div style="font-size:0.75rem;color:#94a3b8;margin-bottom:1rem;line-height:1.5;">
+        JPEG di bawah 100% mengurangi ukuran PDF. PNG diabaikan.
+      </div>
+
       <button class="btn-primary" id="convertBtn" disabled>Buat PDF</button>
       <button class="btn-success" id="downloadPdfBtn" style="display:none;">Download PDF</button>
 
@@ -289,6 +305,14 @@
     const orientation = document.getElementById('orientation');
     const margin = document.getElementById('margin');
     const fitMode = document.getElementById('fitMode');
+    const wmText = document.getElementById('wmText');
+    const wmOpacity = document.getElementById('wmOpacity');
+    const wmOpacityVal = document.getElementById('wmOpacityVal');
+    const jpegQuality = document.getElementById('jpegQuality');
+    const jpegQualityVal = document.getElementById('jpegQualityVal');
+
+    wmOpacity.addEventListener('input', () => { wmOpacityVal.textContent = wmOpacity.value; });
+    jpegQuality.addEventListener('input', () => { jpegQualityVal.textContent = jpegQuality.value; });
 
     let images = [];
 
@@ -433,6 +457,46 @@
       return { w, h };
     }
 
+    /* -- Watermark: rotated text across the page centre -- */
+    function applyWatermark(doc, pageW, pageH) {
+      const text = wmText.value.trim();
+      if (!text) return;
+      const alpha = Math.max(0.03, Math.min(0.8, (parseInt(wmOpacity.value, 10) || 15) / 100));
+      const fontSize = Math.max(18, Math.min(pageW, pageH) * 0.14);
+      doc.setFontSize(fontSize);
+      try {
+        doc.setTextColor(120, 120, 128);
+        doc.text(text, pageW / 2, pageH / 2, {
+          align: 'center',
+          angle: 45,
+          opacity: alpha,
+        });
+      } catch (e) {
+        doc.setTextColor(195, 195, 200);
+        doc.text(text, pageW / 2, pageH / 2, { align: 'center', angle: 45 });
+      }
+    }
+
+    /* -- Compression: re-encode via canvas at the chosen JPEG quality -- */
+    function compressImage(img, qualityPct) {
+      const q = Math.max(0.4, Math.min(1, (parseInt(qualityPct, 10) || 85) / 100));
+      if (q >= 0.999) return Promise.resolve(null);
+      return new Promise(function (resolve) {
+        try {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth;
+          c.height = img.naturalHeight;
+          const cx = c.getContext('2d');
+          cx.fillStyle = '#ffffff';
+          cx.fillRect(0, 0, c.width, c.height);
+          cx.drawImage(img, 0, 0);
+          resolve(c.toDataURL('image/jpeg', q));
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    }
+
     /* ───── Convert to PDF ───── */
     convertBtn.addEventListener('click', async () => {
       if (images.length === 0) return;
@@ -489,7 +553,12 @@
           const x = m + (pageW - imgW) / 2;
           const y = m + (pageH - imgH) / 2;
 
-          doc.addImage(img.dataUrl, 'JPEG', x, y, imgW, imgH, undefined, 'FAST');
+          const compressed = await compressImage(img.img, jpegQuality.value);
+          const src = compressed || img.dataUrl;
+          const fmt = src.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+          doc.addImage(src, fmt, x, y, imgW, imgH, undefined, 'FAST');
+
+          applyWatermark(doc, w, h);
         }
 
         progressFill.style.width = '100%';
@@ -518,6 +587,7 @@
   </script>
   <script src="../assets/js/particles.js"></script>
   <script src="../assets/js/drawer.js"></script>
+  <script src="../assets/js/shortcuts.js"></script>
   <script src="../assets/js/sw-register.js"></script>
 </body>
 </html>
