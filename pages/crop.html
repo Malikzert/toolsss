@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Potong Gambar Panjang</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -203,6 +207,19 @@
     }
     .mode-toggle button.active { background: #6366f1; color: white; }
 
+    .transform-row { display: flex; gap: 0.35rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .btn-transform {
+      flex: 1; min-width: 2.6rem; padding: 0.5rem 0.3rem;
+      border: 1px solid #cbd5e1; background: white; color: #475569;
+      border-radius: 0.4rem; cursor: pointer; font-size: 1rem; line-height: 1;
+      transition: 0.15s;
+    }
+    .btn-transform:hover { border-color: #6366f1; color: #6366f1; }
+    .btn-transform.on { background: #6366f1; color: white; border-color: #6366f1; }
+    .transform-note {
+      font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem; text-align: center;
+    }
+
     .hint {
       font-size: 0.8rem;
       color: #94a3b8;
@@ -271,6 +288,16 @@
         <option value="jpeg">JPEG</option>
       </select>
 
+      <label>Rotasi &amp; Balik</label>
+      <div class="transform-row">
+        <button type="button" class="btn-transform" id="rotLeftBtn" title="Putar kiri 90&deg;">&#8630;</button>
+        <button type="button" class="btn-transform" id="rotRightBtn" title="Putar kanan 90&deg;">&#8631;</button>
+        <button type="button" class="btn-transform" id="flipHBtn" title="Balik horizontal">&#8646;</button>
+        <button type="button" class="btn-transform" id="flipVBtn" title="Balik vertikal">&#8647;</button>
+        <button type="button" class="btn-transform" id="resetTransformBtn" title="Kembalikan orientation">Reset</button>
+      </div>
+      <div class="transform-note" id="transformNote">Normal</div>
+
       <button class="btn-primary" id="applyBtn" disabled>Potong & Tampilkan</button>
       <button class="btn-download" id="downloadAllBtn" disabled>Download Semua (ZIP)</button>
       <button class="btn-danger" id="resetLinesBtn" style="display:none;">Reset Garis</button>
@@ -322,6 +349,51 @@
 
     let originalImage = null;
     let cutPoints = [];          // Y positions of cut lines (between 0 and imgH)
+
+    /* ───── Transform state ───── */
+    const transform = { rot: 0, flipH: false, flipV: false };
+
+    function isQuarterTurn() { return transform.rot === 90 || transform.rot === 270; }
+
+    /* Dimensions of the image AFTER transform */
+    function transformedSize() {
+      const w = originalImage ? originalImage.naturalWidth : 0;
+      const h = originalImage ? originalImage.naturalHeight : 0;
+      return isQuarterTurn() ? { w: h, h: w } : { w: w, h: h };
+    }
+
+    function transformLabel() {
+      const bits = [];
+      if (transform.rot) bits.push(transform.rot + '\u00B0');
+      if (transform.flipH) bits.push('balik H');
+      if (transform.flipV) bits.push('balik V');
+      return bits.length ? bits.join(' + ') : 'Normal';
+    }
+
+    /* CSS transform string for the preview <img> */
+    function previewTransformCss() {
+      const parts = [];
+      if (transform.flipH || transform.flipV) {
+        parts.push('scale(' + (transform.flipH ? -1 : 1) + ',' + (transform.flipV ? -1 : 1) + ')');
+      }
+      if (transform.rot) parts.push('rotate(' + transform.rot + 'deg)');
+      return parts.length ? parts.join(' ') : '';
+    }
+
+    /* ───── Draw the source image with transform applied into a target ctx ───── */
+    function drawTransformed(ctx, srcW, srcH, targetW, targetH) {
+      ctx.save();
+      // translate to target centre, then apply flip/rotate in transformed space
+      ctx.translate(targetW / 2, targetH / 2);
+      if (transform.flipH) ctx.scale(-1, 1);
+      if (transform.flipV) ctx.scale(1, -1);
+      if (transform.rot) ctx.rotate(transform.rot * Math.PI / 180);
+
+      const dw = isQuarterTurn() ? targetH : targetW;
+      const dh = isQuarterTurn() ? targetW : targetH;
+      ctx.drawImage(originalImage, -dw / 2, -dh / 2, dw, dh);
+      ctx.restore();
+    }
     let currentParts = [];
     let mode = 'parts';          // 'parts' | 'height' | 'custom'
 
@@ -357,7 +429,10 @@
     /* ───── Generate cut points from mode ───── */
     function generateCutPointsFromMode() {
       if (!originalImage) return;
-      const imgH = originalImage.naturalHeight;
+      /* Panjang yang dipotong mengikuti sumbu vertikal SETELAH transform:
+         rotasi 90/270 menukar lebar dan tinggi, sehingga memakai
+         naturalHeight akan menghasilkan garis potong di tempat yang salah. */
+      const imgH = transformedSize().h;
       cutPoints = [];
 
       if (mode === 'parts') {
@@ -388,6 +463,10 @@
         const img = new Image();
         img.onload = () => {
           originalImage = img;
+          transform.rot = 0;
+          transform.flipH = false;
+          transform.flipV = false;
+          syncTransformUI();
           mainLayout.style.display = 'flex';
           applyBtn.disabled = false;
           resultsSection.style.display = 'none';
@@ -403,7 +482,7 @@
     /* ───── Compute parts from cutPoints ───── */
     function getParts() {
       if (!originalImage) return [];
-      const imgH = originalImage.naturalHeight;
+      const imgH = transformedSize().h;   // Y axis is measured on the transformed image
       const ov = parseInt(overlap.value) || 0;
       const sorted = [...cutPoints].filter(p => p > 0 && p < imgH).sort((a, b) => a - b);
       const parts = [];
@@ -425,9 +504,12 @@
     /* ───── Update preview ───── */
     function updatePreview() {
       if (!originalImage) return;
-      const imgW = originalImage.naturalWidth;
-      const imgH = originalImage.naturalHeight;
-      imageInfo.textContent = `${imgW} x ${imgH} px`;
+      const size = transformedSize();
+      const imgW = size.w;
+      const imgH = size.h;
+      const origW = originalImage.naturalWidth;
+      const origH = originalImage.naturalHeight;
+      imageInfo.textContent = `${origW} x ${origH} px${imgW !== origW || imgH !== origH ? ' \u2192 ' + imgW + ' x ' + imgH + ' px' : ''}`;
 
       const parts = getParts();
       const ov = parseInt(overlap.value) || 0;
@@ -439,19 +521,25 @@
 
       const wrapper = document.createElement('div');
       wrapper.className = 'split-wrapper';
+      wrapper.style.width = displayW + 'px';
+      wrapper.style.height = displayH + 'px';
 
-      const imgEl = document.createElement('img');
-      imgEl.src = originalImage.src;
-      imgEl.style.cssText = `display:block;width:${displayW}px;height:${displayH}px;`;
-      imgEl.draggable = false;
-      wrapper.appendChild(imgEl);
+      /* Render the transformed image into a canvas so coordinates stay 1:1 */
+      const cvs = document.createElement('canvas');
+      cvs.width = Math.max(1, Math.round(imgW));
+      cvs.height = Math.max(1, Math.round(imgH));
+      const cctx = cvs.getContext('2d');
+      drawTransformed(cctx, origW, origH, cvs.width, cvs.height);
+      cvs.style.cssText = `display:block;width:${displayW}px;height:${displayH}px;`;
+      cvs.draggable = false;
+      wrapper.appendChild(cvs);
 
       /* click to add cut point (custom mode only) */
       if (mode === 'custom') {
         wrapper.style.cursor = 'crosshair';
         wrapper.addEventListener('click', (e) => {
-          if (e.target !== imgEl) return;
-          const rect = imgEl.getBoundingClientRect();
+          if (e.target !== cvs) return;
+          const rect = cvs.getBoundingClientRect();
           const yPx = (e.clientY - rect.top) / scale;
           const y = Math.round(yPx);
           if (y > 5 && y < imgH - 5 && !cutPoints.some(cp => Math.abs(cp - y) < 10)) {
@@ -547,12 +635,20 @@
 
         parts.forEach((p, idx) => {
           const cvs = document.createElement('canvas');
-          const imgW = originalImage.naturalWidth;
-          const imgH = originalImage.naturalHeight;
+          const size = transformedSize();
+          const imgW = size.w;
           cvs.width = imgW;
           cvs.height = p.h;
           const ctx = cvs.getContext('2d');
-          ctx.drawImage(originalImage, 0, p.y, imgW, p.h, 0, 0, imgW, p.h);
+
+          // Build the full transformed image once per part, then take the slice.
+          // Cheaper alternative: draw whole transformed image, then crop via drawImage of itself.
+          const full = document.createElement('canvas');
+          full.width = imgW;
+          full.height = size.h;
+          const fctx = full.getContext('2d');
+          drawTransformed(fctx, originalImage.naturalWidth, originalImage.naturalHeight, imgW, size.h);
+          ctx.drawImage(full, 0, p.y, imgW, p.h, 0, 0, imgW, p.h);
 
           const fmt = format.value === 'jpeg' ? 'image/jpeg' : 'image/png';
           const quality = fmt === 'image/jpeg' ? 0.92 : undefined;
@@ -582,7 +678,66 @@
       }, 100);
     });
 
+    /* ───── Transform controls ───── */
+    const rotLeftBtn = document.getElementById('rotLeftBtn');
+    const rotRightBtn = document.getElementById('rotRightBtn');
+    const flipHBtn = document.getElementById('flipHBtn');
+    const flipVBtn = document.getElementById('flipVBtn');
+    const resetTransformBtn = document.getElementById('resetTransformBtn');
+    const transformNote = document.getElementById('transformNote');
+
+    function syncTransformUI() {
+      transformNote.textContent = 'Orientasi: ' + transformLabel();
+      rotLeftBtn.classList.toggle('on', transform.rot === 270);
+      rotRightBtn.classList.toggle('on', transform.rot === 90);
+      flipHBtn.classList.toggle('on', transform.flipH);
+      flipVBtn.classList.toggle('on', transform.flipV);
+      const identity = transform.rot === 0 && !transform.flipH && !transform.flipV;
+      resetTransformBtn.classList.toggle('on', !identity);
+    }
+
+    function applyTransformChange() {
+      syncTransformUI();
+      /* Cut point dihitung dari sumbu vertikal gambar yang sudah ditransform,
+         jadi mode 'parts' dan 'height' harus dihitung ulang dari nol. */
+      cutPoints = [];
+      resultsSection.style.display = 'none';
+      downloadAllBtn.disabled = true;
+      resultsGrid.innerHTML = '';
+      if (mode === 'parts' || mode === 'height') {
+        generateCutPointsFromMode();
+      } else {
+        updatePreview();
+      }
+    }
+
+    rotLeftBtn.addEventListener('click', () => {
+      transform.rot = (transform.rot + 270) % 360;
+      applyTransformChange();
+    });
+    rotRightBtn.addEventListener('click', () => {
+      transform.rot = (transform.rot + 90) % 360;
+      applyTransformChange();
+    });
+    flipHBtn.addEventListener('click', () => {
+      transform.flipH = !transform.flipH;
+      applyTransformChange();
+    });
+    flipVBtn.addEventListener('click', () => {
+      transform.flipV = !transform.flipV;
+      applyTransformChange();
+    });
+    resetTransformBtn.addEventListener('click', () => {
+      transform.rot = 0;
+      transform.flipH = false;
+      transform.flipV = false;
+      applyTransformChange();
+    });
+
+    syncTransformUI();
+
     /* ───── Download All ZIP ───── */
+
     downloadAllBtn.addEventListener('click', async () => {
       downloadAllBtn.disabled = true;
       downloadAllBtn.textContent = 'Membuat ZIP...';
@@ -658,6 +813,7 @@
   </script>
   <script src="../assets/js/particles.js"></script>
   <script src="../assets/js/drawer.js"></script>
+  <script src="../assets/js/shortcuts.js"></script>
   <script src="../assets/js/sw-register.js"></script>
 </body>
 </html>
