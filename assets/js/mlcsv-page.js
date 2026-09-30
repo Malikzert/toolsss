@@ -153,8 +153,8 @@
     $('mlRegResult').textContent = r.equation + ' - r = ' + num(r.r) + ', r\u00b2 = ' + num(r.r2) +
       ', n = ' + r.n + ', MSE = ' + num(r.mse);
   }
-  on('mlRegX', computeRegression);
-  on('mlRegY', computeRegression);
+  $('mlRegX').addEventListener('change', computeRegression);
+  $('mlRegY').addEventListener('change', computeRegression);
 
   /* ═══ SPLIT ═══ */
   function renderSplit() {
