@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dev Tools &mdash; COFDE Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
+</head>
+<body>
+<div class="cx-page">
+
+  <header class="cx-head">
+    <div>
+      <h1 class="cx-title">Dev Tools</h1>
+      <p class="cx-sub">Kumpulan utilitas developer. Semua diproses di browser, tidak ada data yang dikirim ke server.</p>
+    </div>
+    <span id="netBadge" class="cx-net"><span class="cx-net-dot"></span>Online</span>
+  </header>
+
+  <p class="cx-note">
+    Tempel kode atau teks ke kolom mana pun. Tekan <span class="cx-mono">Ctrl+K</span> untuk membuka pencarian tool.
+  </p>
+
+  <!-- JSON -->
+  <section class="cx-card" id="t-json">
+    <h2 class="cx-card-title">JSON Formatter</h2>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Indentasi</span>
+        <select id="jsonIndent" class="cx-select">
+          <option value="2">2 spasi</option>
+          <option value="4">4 spasi</option>
+          <option value="tab">Tab</option>
+        </select>
+      </label>
+      <div class="cx-field cx-right">
+        <span class="cx-label">&nbsp;</span>
+        <div class="cx-actions">
+          <button class="cx-btn cx-btn-primary" id="jsonFormat">Format</button>
+          <button class="cx-btn" id="jsonMinify">Minify</button>
+          <button class="cx-btn" id="jsonToCsv">JSON ke CSV</button>
+          <button class="cx-btn" id="jsonCopy">Salin</button>
+        </div>
+      </div>
+    </div>
+    <label class="cx-field">
+      <span class="cx-label">Input JSON</span>
+      <textarea id="jsonIn" class="cx-textarea" rows="7" spellcheck="false" placeholder='{"nama":"Budi","umur":30}'></textarea>
+    </label>
+    <label class="cx-field">
+      <span class="cx-label">Hasil</span>
+      <textarea id="jsonOut" class="cx-textarea" rows="9" spellcheck="false" readonly></textarea>
+    </label>
+    <p class="cx-note" id="jsonStatus"></p>
+  </section>
+
+  <!-- Base64 -->
+  <section class="cx-card" id="t-base64">
+    <h2 class="cx-card-title">Base64</h2>
+    <div class="cx-row">
+      <div class="cx-field cx-right">
+        <span class="cx-label">&nbsp;</span>
+        <div class="cx-actions">
+          <button class="cx-btn cx-btn-primary" id="b64Encode">Encode</button>
+          <button class="cx-btn" id="b64Decode">Decode</button>
+          <button class="cx-btn" id="b64Copy">Salin hasil</button>
+        </div>
+      </div>
+    </div>
+    <label class="cx-field">
+      <span class="cx-label">Teks biasa / Base64</span>
+      <textarea id="b64In" class="cx-textarea" rows="6" spellcheck="false" placeholder="Teks atau Base64, keduanya aman untuk karakter Unicode."></textarea>
+    </label>
+    <label class="cx-field">
+      <span class="cx-label">Hasil</span>
+      <textarea id="b64Out" class="cx-textarea" rows="6" spellcheck="false" readonly></textarea>
+    </label>
+  </section>
+
+  <!-- URL -->
+  <section class="cx-card" id="t-url">
+    <h2 class="cx-card-title">URL Encode / Decode / Parse</h2>
+    <label class="cx-field">
+      <span class="cx-label">URL atau teks</span>
+      <input type="text" id="urlIn" class="cx-input" spellcheck="false" placeholder="https://contoh.com/path?a=1&amp;b=2#bagian">
+    </label>
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="urlEncode">Encode komponen</button>
+      <button class="cx-btn" id="urlDecode">Decode komponen</button>
+      <button class="cx-btn" id="urlParse">Parse</button>
+      <button class="cx-btn" id="urlCopy">Salin hasil</button>
+    </div>
+    <label class="cx-field">
+      <span class="cx-label">Hasil</span>
+      <textarea id="urlOut" class="cx-textarea" rows="8" spellcheck="false" readonly></textarea>
+    </label>
+  </section>
+
+  <!-- JWT -->
+  <section class="cx-card" id="t-jwt">
+    <h2 class="cx-card-title">JWT Decode</h2>
+    <p class="cx-note">
+      Tool ini hanya membaca isi token. Tanda tangan <span class="cx-mono">TIDAK</span> diverifikasi,
+      jadi token yang valid-looking belum tentu sah.
+    </p>
+    <label class="cx-field">
+      <span class="cx-label">Token JWT</span>
+      <textarea id="jwtIn" class="cx-textarea" rows="4" spellcheck="false" placeholder="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.xxxxx"></textarea>
+    </label>
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="jwtRun">Decode</button>
+      <button class="cx-btn" id="jwtPaste">Tempel contoh</button>
+    </div>
+    <div id="jwtOut" class="cx-hidden"></div>
+  </section>
+
+  <!-- UUID -->
+  <section class="cx-card" id="t-uuid">
+    <h2 class="cx-card-title">UUID Generator</h2>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Jumlah</span>
+        <input type="number" id="uuidCount" class="cx-input" value="5" min="1" max="1000">
+      </label>
+      <div class="cx-field cx-right">
+        <span class="cx-label">&nbsp;</span>
+        <div class="cx-actions">
+          <button class="cx-btn cx-btn-primary" id="uuidRun">Buat</button>
+          <button class="cx-btn" id="uuidCopy">Salin semua</button>
+        </div>
+      </div>
+    </div>
+    <textarea id="uuidOut" class="cx-textarea" rows="8" spellcheck="false" readonly></textarea>
+  </section>
+
+  <!-- Regex -->
+  <section class="cx-card" id="t-regex">
+    <h2 class="cx-card-title">Regex Tester</h2>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Pola</span>
+        <input type="text" id="rePattern" class="cx-input" spellcheck="false" placeholder="\d+">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Flag</span>
+        <input type="text" id="reFlags" class="cx-input" spellcheck="false" value="g" placeholder="gim">
+      </label>
+    </div>
+    <div class="cx-chip-list" id="rePresets"></div>
+    <label class="cx-field">
+      <span class="cx-label">Teks uji</span>
+      <textarea id="reText" class="cx-textarea" rows="5" spellcheck="false" placeholder="Tempel teks untuk diuji"></textarea>
+    </label>
+    <label class="cx-field">
+      <span class="cx-label">Ganti dengan (opsional)</span>
+      <input type="text" id="reReplace" class="cx-input" spellcheck="false" placeholder="kosongkan bila tidak ingin mengganti">
+    </label>
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="reRun">Uji</button>
+      <button class="cx-btn" id="reCopy">Salin hasil</button>
+    </div>
+    <p class="cx-note" id="reStatus"></p>
+    <div class="cx-table-wrap cx-hidden" id="reTableWrap">
+      <table class="cx-table">
+        <thead><tr><th>#</th><th>Posisi</th><th>Teks cocok</th><th>Grup tangkapan</th></tr></thead>
+        <tbody id="reTable"></tbody>
+      </table>
+    </div>
+    <label class="cx-field cx-hidden" id="reOutWrap">
+      <span class="cx-label">Hasil penggantian</span>
+      <textarea id="reOut" class="cx-textarea" rows="4" spellcheck="false" readonly></textarea>
+    </label>
+  </section>
+
+  <!-- Hash -->
+  <section class="cx-card" id="t-hash">
+    <h2 class="cx-card-title">Hash (SHA-256 / 384 / 512)</h2>
+    <p class="cx-note">Dijalankan lewat Web Crypto, jadi butuh halaman dibuka lewat <span class="cx-mono">https</span> atau <span class="cx-mono">localhost</span>.</p>
+    <label class="cx-field">
+      <span class="cx-label">Teks</span>
+      <textarea id="hashIn" class="cx-textarea" rows="4" spellcheck="false" placeholder="Teks untuk di-hash"></textarea>
+    </label>
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="hashRun">Hitung</button>
+      <button class="cx-btn" id="hashCopy">Salin semua</button>
+    </div>
+    <div id="hashOut" class="cx-mono cx-note"></div>
+  </section>
+
+  <!-- Timestamp -->
+  <section class="cx-card" id="t-time">
+    <h2 class="cx-card-title">Timestamp</h2>
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="timeNow">Waktu sekarang</button>
+      <button class="cx-btn" id="timeToIso">Epoch ke ISO</button>
+      <button class="cx-btn" id="timeToEpoch">ISO ke Epoch</button>
+      <button class="cx-btn" id="timeCopy">Salin hasil</button>
+    </div>
+    <div class="cx-stats" id="timeStats"></div>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Nilai (epoch atau ISO)</span>
+        <input type="text" id="timeIn" class="cx-input" spellcheck="false" placeholder="1700000000 atau 2026-09-30T00:00:00Z">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Selisih waktu (ms)</span>
+        <input type="text" id="timeMs" class="cx-input" inputmode="numeric" placeholder="3600000">
+      </label>
+    </div>
+    <p class="cx-note" id="timeNote"></p>
+  </section>
+
+  <!-- Color -->
+  <section class="cx-card" id="t-color">
+    <h2 class="cx-card-title">Color Picker &amp; Kontras WCAG</h2>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Warna</span>
+        <input type="text" id="colorIn" class="cx-input" spellcheck="false" value="#ff4655" placeholder="#ff4655, rgb(), hsl()">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Warna pembanding</span>
+        <input type="text" id="colorIn2" class="cx-input" spellcheck="false" value="#ffffff" placeholder="#000000">
+      </label>
+    </div>
+    <div class="cx-actions">
+      <input type="color" id="colorPicker" class="cx-input" style="width:60px" aria-label="Pilih warna">
+      <button class="cx-btn cx-btn-primary" id="colorRun">Hitung</button>
+      <button class="cx-btn" id="colorCopy">Salin semua</button>
+    </div>
+    <div id="colorOut"></div>
+  </section>
+
+  <!-- Cron -->
+  <section class="cx-card" id="t-cron">
+    <h2 class="cx-card-title">Cron Expression Parser</h2>
+    <p class="cx-note">Format 5 field: <span class="cx-mono">menit jam tanggal bulan hari</span>. Menghitung waktu berjalan berikutnya secara lokal.</p>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Ekspresi</span>
+        <input type="text" id="cronIn" class="cx-input" spellcheck="false" value="0 9 * * 1-5" placeholder="*/15 * * * *">
+      </label>
+      <div class="cx-field cx-right">
+        <span class="cx-label">&nbsp;</span>
+        <div class="cx-actions">
+          <button class="cx-btn cx-btn-primary" id="cronRun">Parse</button>
+        </div>
+      </div>
+    </div>
+    <div class="cx-chip-list" id="cronPresets"></div>
+    <p class="cx-note" id="cronStatus"></p>
+    <div class="cx-table-wrap cx-hidden" id="cronTableWrap">
+      <table class="cx-table">
+        <thead><tr><th>#</th><th>Waktu berikutnya</th></tr></thead>
+        <tbody id="cronTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Markdown -->
+  <section class="cx-card" id="t-markdown">
+    <h2 class="cx-card-title">Markdown Preview</h2>
+    <p class="cx-note">Input di-escape lebih dulu, jadi HTML yang kamu tempel tidak akan dieksekusi.</p>
+    <label class="cx-field">
+      <span class="cx-label">Markdown</span>
+      <textarea id="mdIn" class="cx-textarea" rows="8" spellcheck="false" placeholder="# Judul&#10;&#10;- daftar&#10;- item&#10;&#10;**tebal** dan *miring*"></textarea>
+    </label>
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="mdRun">Pratinjau</button>
+      <button class="cx-btn" id="mdHtml">Lihat HTML</button>
+      <button class="cx-btn" id="mdText">Teks polos</button>
+    </div>
+    <div id="mdOut" class="cx-journal cx-note"></div>
+  </section>
+
+  <!-- SQL -->
+  <section class="cx-card" id="t-sql">
+    <h2 class="cx-card-title">SQL Formatter</h2>
+    <p class="cx-note">Hanya memformat teks SQL. Tool ini tidak pernah terhubung ke database dan tidak menjalankan kueri.</p>
+    <label class="cx-field">
+      <span class="cx-label">SQL</span>
+      <textarea id="sqlIn" class="cx-textarea" rows="6" spellcheck="false" placeholder="select id,nama from users where aktif=1 order by nama"></textarea>
+    </label>
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="sqlRun">Format</button>
+      <button class="cx-btn" id="sqlCopy">Salin hasil</button>
+    </div>
+    <label class="cx-field">
+      <span class="cx-label">Hasil</span>
+      <textarea id="sqlOut" class="cx-textarea" rows="10" spellcheck="false" readonly></textarea>
+    </label>
+    <div id="sqlChecks"></div>
+  </section>
+
+</div>
+
+<script src="../assets/js/toast.js"></script>
+<script src="../assets/js/guard.js"></script>
+<script src="../assets/js/fmt.js"></script>
+<script src="../assets/js/settings.js"></script>
+<script src="../assets/js/net.js"></script>
+<script src="../assets/js/cmdpal.js"></script>
+<script src="../assets/js/devtools.js"></script>
+<script src="../assets/js/particles.js"></script>
+<script src="../assets/js/drawer.js"></script>
+<script src="../assets/js/shortcuts.js"></script>
+<script src="../assets/js/sw-register.js"></script>
+<script src="../assets/js/devtools-page.js"></script>
+</body>
+</html>

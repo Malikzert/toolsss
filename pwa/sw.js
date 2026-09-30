@@ -4,7 +4,7 @@
      - CDN libraries (cross origin): cache-first, they are version-pinned URLs
      - navigations: network first, fall back to cached index.html
 */
-var VERSION = 'cofde-v5';
+var VERSION = 'cofde-v6';
 var SHELL_CACHE = VERSION + '-shell';
 var CDN_CACHE = VERSION + '-cdn';
 
@@ -18,11 +18,19 @@ var SHELL = [
   '../pages/merge.html',
   '../pages/split.html',
   '../pages/konversi.html',
+  '../pages/devtools.html',
+  '../pages/qr.html',
+  '../pages/maps.html',
+  '../pages/mlcsv.html',
   '../assets/css/style.css',
   '../assets/js/drawer.js',
   '../assets/js/particles.js',
   '../assets/js/sw-register.js',
   '../assets/js/shortcuts.js',
+  '../assets/js/devtools-page.js',
+  '../assets/js/qr-page.js',
+  '../assets/js/maps-page.js',
+  '../assets/js/mlcsv-page.js',
   './manifest.webmanifest',
   './icons/icon.svg',
   './icons/icon-192.png',
@@ -40,7 +48,12 @@ var CDN = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
   'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js',
-  'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'
+  'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js',
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
+  'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js',
+  'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
+  'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+  'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'
 ];
 
 self.addEventListener('install', function (e) {

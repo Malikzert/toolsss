@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ML CSV Visualizer &mdash; COFDE Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
+</head>
+<body>
+<div class="cx-page">
+
+  <header class="cx-head">
+    <div>
+      <h1 class="cx-title">ML CSV Visualizer</h1>
+      <p class="cx-sub">Analisis ringkas data CSV: tipe kolom, statistik, korelasi, regresi, distribusi, dan split train/test. Semua lokal di browser.</p>
+    </div>
+    <span id="netBadge" class="cx-net"><span class="cx-net-dot"></span>Online</span>
+  </header>
+
+  <p class="cx-note">
+    Data tidak pernah meninggalkan browser. File besar bisa membuat browser lambat; coba batasi 50.000 baris.
+  </p>
+
+  <div class="cx-tabs">
+    <button class="cx-tab active" data-ttab="ana" type="button">Analisis</button>
+    <button class="cx-tab" data-ttab="split" type="button">Split Train/Test</button>
+  </div>
+
+  <section class="cx-card" id="ttab-ana">
+    <h2 class="cx-card-title">Input Data</h2>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">File CSV/TSV</span>
+        <input type="file" id="mlFile" class="cx-input" accept=".csv,.tsv,.txt,text/csv,text/plain">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Delimiter</span>
+        <select id="mlDelim" class="cx-select">
+          <option value="">Auto</option>
+          <option value=",">Koma</option>
+          <option value=";">Titik koma</option>
+          <option value="\t">Tab</option>
+        </select>
+      </label>
+      <label class="cx-field cx-right">
+        <span class="cx-label">Baris pertama = header</span>
+        <input type="checkbox" id="mlHeader" checked aria-label="Header" style="margin-top:28px;width:20px;height:20px">
+      </label>
+    </div>
+    <label class="cx-field">
+      <span class="cx-label">Atau tempel teks CSV</span>
+      <textarea id="mlText" class="cx-textarea" rows="8" spellcheck="false" placeholder="id,nama,umur&#10;1,Budi,30&#10;2,Siti,24"></textarea>
+    </label>
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="mlRun" type="button">Analisis</button>
+      <button class="cx-btn" id="mlExample" type="button">Muat contoh</button>
+      <button class="cx-btn" id="mlClear" type="button">Bersihkan hasil</button>
+    </div>
+  </section>
+
+  <section class="cx-card" id="mlResults">
+    <h2 class="cx-card-title">Hasil</h2>
+    <div class="cx-stats" id="mlSummary"></div>
+    <div class="cx-table-wrap">
+      <table class="cx-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Jumlah</th><th>Kosong</th><th>Terisi</th><th>Unik</th><th>Contoh</th></tr></thead>
+        <tbody id="mlTable"></tbody>
+      </table>
+    </div>
+    <div id="mlBars"></div>
+    <h3 class="cx-card-title" id="mlCorrTitle" style="display:none">Korelasi (Pearson)</h3>
+    <div class="cx-table-wrap" id="mlCorrWrap" style="display:none">
+      <table class="cx-table">
+        <thead><tr><th>Kolom A</th><th>Kolom B</th><th>r</th></tr></thead>
+        <tbody id="mlCorrTable"></tbody>
+      </table>
+    </div>
+    <div id="mlRegress" style="display:none">
+      <h3 class="cx-card-title">Regresi Linear</h3>
+      <div class="cx-row">
+        <label class="cx-field">
+          <span class="cx-label">X (bebas)</span>
+          <select id="mlRegX" class="cx-select"></select>
+        </label>
+        <label class="cx-field">
+          <span class="cx-label">Y (terikat)</span>
+          <select id="mlRegY" class="cx-select"></select>
+        </label>
+      </div>
+      <p class="cx-note" id="mlRegResult"></p>
+    </div>
+    <div id="mlCats"></div>
+  </section>
+
+  <section class="cx-card cx-hidden" id="ttab-split">
+    <h2 class="cx-card-title">Split Train/Test</h2>
+    <p class="cx-note">Membagi baris menjadi train dan test secara acak namun deterministik sesuai seed. Cocok untuk mengecek model sederhana.</p>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Seed</span>
+        <input type="number" id="mlSeed" class="cx-input" value="42">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Porsi test (0-1)</span>
+        <input type="number" id="mlRatio" class="cx-input" value="0.2" min="0" max="1" step="0.05">
+      </label>
+      <div class="cx-field cx-right">
+        <span class="cx-label">&nbsp;</span>
+        <div class="cx-actions">
+          <button class="cx-btn cx-btn-primary" id="mlSplit" type="button">Hitung split</button>
+        </div>
+      </div>
+    </div>
+    <div class="cx-stats" id="mlSplitStats"></div>
+    <div class="cx-table-wrap"><table class="cx-table"><tbody id="mlSplitTable"></tbody></table></div>
+  </section>
+
+</div>
+
+<script src="../assets/js/toast.js"></script>
+<script src="../assets/js/guard.js"></script>
+<script src="../assets/js/fmt.js"></script>
+<script src="../assets/js/settings.js"></script>
+<script src="../assets/js/net.js"></script>
+<script src="../assets/js/cmdpal.js"></script>
+<script src="../assets/js/mlcsv.js"></script>
+<script src="../assets/js/particles.js"></script>
+<script src="../assets/js/drawer.js"></script>
+<script src="../assets/js/shortcuts.js"></script>
+<script src="../assets/js/sw-register.js"></script>
+<script src="../assets/js/mlcsv-page.js"></script>
+</body>
+</html>

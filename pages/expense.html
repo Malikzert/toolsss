@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Tracker &mdash; COFDE Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="cx-page">
+
+  <header class="cx-head">
+    <div>
+      <h1 class="cx-title">Expense Tracker</h1>
+      <p class="cx-sub">Catat pengeluaran dan pemasukan harian. Semua data tersimpan lokal di browser.</p>
+    </div>
+    <span id="netBadge" class="cx-net"><span class="cx-net-dot"></span>Online</span>
+  </header>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Tambah Transaksi</h2>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Tanggal</span>
+        <input type="date" id="txDate" class="cx-input">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Jenis</span>
+        <select id="txType" class="cx-select">
+          <option value="expense">Pengeluaran</option>
+          <option value="income">Pemasukan</option>
+        </select>
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Jumlah</span>
+        <input type="text" inputmode="decimal" id="txAmount" class="cx-input" placeholder="0" autocomplete="off">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Kategori</span>
+        <select id="txCategory" class="cx-select"></select>
+      </label>
+    </div>
+    <label class="cx-field">
+      <span class="cx-label">Catatan transaksi</span>
+      <input type="text" id="txNote" class="cx-input" placeholder="mis. makan siang, bensin" autocomplete="off">
+    </label>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Title jurnal <span class="cx-note-inline">(opsional)</span></span>
+        <input type="text" id="txDayTitle" class="cx-input" placeholder="mis. Hari biasa, Gajian" autocomplete="off">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Catatan jurnal <span class="cx-note-inline">(opsional)</span></span>
+        <input type="text" id="txDayNote" class="cx-input" placeholder="catatan untuk tanggal ini" autocomplete="off">
+      </label>
+    </div>
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="txAdd">Tambah</button>
+      <button class="cx-btn" id="txReset" hidden>Batal edit</button>
+    </div>
+  </section>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Ringkasan</h2>
+    <div class="cx-tabs" id="rangeTabs">
+      <button class="cx-tab active" data-range="today">Hari ini</button>
+      <button class="cx-tab" data-range="yesterday">Kemarin</button>
+      <button class="cx-tab" data-range="week">Minggu ini</button>
+      <button class="cx-tab" data-range="month">Bulan ini</button>
+      <button class="cx-tab" data-range="all">Semua</button>
+      <button class="cx-tab" data-range="custom">Custom</button>
+    </div>
+    <div class="cx-row" id="customRange" hidden>
+      <label class="cx-field">
+        <span class="cx-label">Dari</span>
+        <input type="date" id="rangeFrom" class="cx-input">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Sampai</span>
+        <input type="date" id="rangeTo" class="cx-input">
+      </label>
+    </div>
+    <p class="cx-note" id="rangeLabel">&mdash;</p>
+    <div class="cx-stats">
+      <div class="cx-stat"><div class="cx-stat-label">Pemasukan</div><div class="cx-stat-value income" id="mIncome">0</div></div>
+      <div class="cx-stat"><div class="cx-stat-label">Pengeluaran</div><div class="cx-stat-value expense" id="mExpense">0</div></div>
+      <div class="cx-stat"><div class="cx-stat-label">Bersih</div><div class="cx-stat-value" id="mNet">0</div></div>
+      <div class="cx-stat"><div class="cx-stat-label">Rata-rata / hari</div><div class="cx-stat-value" id="mAvg">0</div></div>
+      <div class="cx-stat"><div class="cx-stat-label">Kategori teratas</div><div class="cx-stat-value" id="mTopCat">&mdash;</div></div>
+      <div class="cx-stat"><div class="cx-stat-label">Hari terboros</div><div class="cx-stat-value" id="mTopDay">&mdash;</div></div>
+    </div>
+  </section>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Budget Bulanan</h2>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Bulan</span>
+        <input type="month" id="budgetMonth" class="cx-input">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Limit pengeluaran</span>
+        <input type="text" inputmode="decimal" id="budgetAmount" class="cx-input" placeholder="0" autocomplete="off">
+      </label>
+      <button class="cx-btn cx-btn-primary" id="budgetSave">Simpan</button>
+    </div>
+    <div class="cx-bar" id="budgetBar" hidden>
+      <div class="cx-bar-fill" id="budgetFill"></div>
+    </div>
+    <p class="cx-note" id="budgetNote">Belum ada limit untuk bulan ini.</p>
+  </section>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Grafik</h2>
+    <div class="cx-grid-2">
+      <div class="cx-panel">
+        <h3 class="cx-card-title">Pengeluaran harian</h3>
+        <div class="cx-chart"><canvas id="chDaily"></canvas></div>
+      </div>
+      <div class="cx-panel">
+        <h3 class="cx-card-title">Kategori pengeluaran</h3>
+        <div class="cx-chart"><canvas id="chCategory"></canvas></div>
+      </div>
+    </div>
+    <div class="cx-panel">
+      <h3 class="cx-card-title">Pemasukan vs pengeluaran</h3>
+      <div class="cx-chart"><canvas id="chFlow"></canvas></div>
+    </div>
+    <p class="cx-note" id="chartNote" hidden>Chart.js tidak bisa dimuat, jadi grafik dilewati. Data tetap bisa dibaca dan diekspor.</p>
+  </section>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Transaksi</h2>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Cari</span>
+        <input type="search" id="fltQ" class="cx-input" placeholder="catatan, kategori, title jurnal" autocomplete="off">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Jenis</span>
+        <select id="fltType" class="cx-select">
+          <option value="all">Semua</option>
+          <option value="expense">Pengeluaran</option>
+          <option value="income">Pemasukan</option>
+        </select>
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Kategori</span>
+        <select id="fltCategory" class="cx-select"><option value="all">Semua</option></select>
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Urutkan</span>
+        <select id="fltSort" class="cx-select">
+          <option value="date:desc">Tanggal (terbaru)</option>
+          <option value="date:asc">Tanggal (terlama)</option>
+          <option value="amount:desc">Jumlah (terbesar)</option>
+          <option value="amount:asc">Jumlah (terkecil)</option>
+          <option value="category:asc">Kategori (A-Z)</option>
+        </select>
+      </label>
+    </div>
+    <p class="cx-note" id="fltInfo">&mdash;</p>
+    <div class="cx-table-wrap">
+      <table class="cx-table">
+        <thead>
+          <tr><th>Tanggal</th><th>Jenis</th><th>Kategori</th><th class="cx-right">Jumlah</th><th>Catatan</th><th></th></tr>
+        </thead>
+        <tbody id="txBody"></tbody>
+      </table>
+    </div>
+    <p class="cx-empty" id="txEmpty" hidden>Belum ada transaksi yang cocok.</p>
+  </section>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Journal per Tanggal</h2>
+    <p class="cx-sub">Setiap tanggal adalah satu journal yang bisa berisi beberapa transaksi.</p>
+    <div id="journalList"></div>
+    <p class="cx-empty" id="journalEmpty" hidden>Belum ada journal.</p>
+  </section>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Kategori</h2>
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Nama kategori</span>
+        <input type="text" id="catName" class="cx-input" placeholder="mis. Olahraga" autocomplete="off">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Untuk</span>
+        <select id="catKind" class="cx-select">
+          <option value="both">Semua</option>
+          <option value="expense">Pengeluaran</option>
+          <option value="income">Pemasukan</option>
+        </select>
+      </label>
+      <button class="cx-btn cx-btn-primary" id="catAdd">Tambah</button>
+    </div>
+    <div class="cx-actions" id="catList"></div>
+  </section>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Data</h2>
+    <div class="cx-actions">
+      <button class="cx-btn" id="expCsv">Export CSV</button>
+      <button class="cx-btn" id="expJson">Export JSON</button>
+      <label class="cx-btn" for="impFile" style="cursor:pointer">Import JSON</label>
+      <input type="file" id="impFile" accept="application/json,.json" hidden>
+      <button class="cx-btn" id="expPrint">Print</button>
+    </div>
+    <p class="cx-note">CSV dan JSON memuat transaksi yang sedang difilter, bukan seluruh data.</p>
+  </section>
+
+</div>
+
+<script src="../assets/js/toast.js"></script>
+<script src="../assets/js/guard.js"></script>
+<script src="../assets/js/fmt.js"></script>
+<script src="../assets/js/idb.js"></script>
+<script src="../assets/js/settings.js"></script>
+<script src="../assets/js/net.js"></script>
+<script src="../assets/js/cmdpal.js"></script>
+<script src="../assets/js/expense.js"></script>
+<script src="../assets/js/expense-page.js"></script>
+<script src="../assets/js/particles.js"></script>
+<script src="../assets/js/drawer.js"></script>
+<script src="../assets/js/shortcuts.js"></script>
+<script src="../assets/js/sw-register.js"></script>
+</body>
+</html>

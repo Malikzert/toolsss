@@ -12,7 +12,13 @@
     { href: 'gabung.html',    label: 'Gabung ke PDF' },
     { href: 'merge.html',     label: 'Merge PDF' },
     { href: 'split.html',     label: 'Split PDF' },
-    { href: 'konversi.html',  label: 'Konversi' }
+    { href: 'konversi.html',  label: 'Konversi' },
+    { href: 'expense.html',   label: 'Expense Tracker' },
+    { href: 'maps.html',      label: 'Maps' },
+    { href: 'qr.html',        label: 'QR Code Tools' },
+    { href: 'mlcsv.html',     label: 'ML CSV Visualizer' },
+    { href: 'devtools.html',  label: 'Developer Tools' },
+    { href: 'settings.html',  label: 'Settings' }
   ];
 
   var COLS = 5;

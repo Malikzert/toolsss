@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings &mdash; COFDE Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
+</head>
+<body>
+<div class="cx-page">
+
+  <header class="cx-head">
+    <div>
+      <h1 class="cx-title">Settings</h1>
+      <p class="cx-sub">Tampilan, mata uang, format tanggal, dan pengelolaan data lokal.</p>
+    </div>
+    <span id="netBadge" class="cx-net"><span class="cx-net-dot"></span>Online</span>
+  </header>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Appearance</h2>
+    <label class="cx-field">
+      <span class="cx-label">Tema</span>
+      <select id="appearance" class="cx-select">
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+        <option value="system">System (ikuti perangkat)</option>
+      </select>
+    </label>
+    <p class="cx-note">Light memakai tema Lightholy, Dark memakai Darkside, dan System mengikuti setelan perangkat lalu memilih Abyss saat mode gelap.</p>
+  </section>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Currency</h2>
+    <label class="cx-field">
+      <span class="cx-label">Mata uang</span>
+      <select id="currency" class="cx-select">
+        <option value="IDR">IDR &mdash; Rp</option>
+        <option value="USD">USD &mdash; $</option>
+        <option value="EUR">EUR &mdash; &euro;</option>
+        <option value="GBP">GBP &mdash; &pound;</option>
+        <option value="JPY">JPY &mdash; &yen;</option>
+        <option value="CUSTOM">Custom...</option>
+      </select>
+    </label>
+    <div id="customBox" hidden>
+      <div class="cx-row">
+        <label class="cx-field">
+          <span class="cx-label">Kode</span>
+          <input id="curCode" class="cx-input" maxlength="4" placeholder="MYR" autocomplete="off">
+        </label>
+        <label class="cx-field">
+          <span class="cx-label">Simbol</span>
+          <input id="curSymbol" class="cx-input" maxlength="4" placeholder="RM" autocomplete="off">
+        </label>
+      </div>
+    </div>
+    <div class="cx-stat" style="margin-top:0.5rem">
+      <div class="cx-stat-label">Pratinjau</div>
+      <div class="cx-stat-value" id="moneyPreview">Rp1.250.000</div>
+    </div>
+  </section>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Date Format</h2>
+    <label class="cx-field">
+      <span class="cx-label">Format tanggal</span>
+      <select id="dateFormat" class="cx-select">
+        <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+      </select>
+    </label>
+    <div class="cx-stat">
+      <div class="cx-stat-label">Contoh hari ini</div>
+      <div class="cx-stat-value" id="datePreview">&mdash;</div>
+    </div>
+  </section>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Data</h2>
+    <p class="cx-sub" style="margin-bottom:0.9rem">Semua data expense disimpan di IndexedDB browser dan tidak pernah dikirim ke server.</p>
+    <div class="cx-actions">
+      <button class="cx-btn" id="exportAll">Export semua data</button>
+      <label class="cx-btn" for="importFile" style="cursor:pointer">Import data</label>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <button class="cx-btn cx-btn-danger" id="clearExpense">Clear expense data</button>
+      <button class="cx-btn cx-btn-danger" id="clearAll">Clear all local data</button>
+    </div>
+    <div class="cx-stat" style="margin-top:1rem">
+      <div class="cx-stat-label">Penyimpanan</div>
+      <div class="cx-stat-value" id="storageInfo">&mdash;</div>
+    </div>
+  </section>
+
+  <section class="cx-card">
+    <h2 class="cx-card-title">Shortcuts</h2>
+    <p class="cx-sub" style="margin-bottom:0.7rem">Tekan <span class="cx-chip">Ctrl</span> + <span class="cx-chip">K</span> untuk pencarian global.</p>
+    <button class="cx-btn" id="showShortcuts">Buka daftar pintasan</button>
+  </section>
+
+</div>
+
+<script src="../assets/js/toast.js"></script>
+<script src="../assets/js/guard.js"></script>
+<script src="../assets/js/fmt.js"></script>
+<script src="../assets/js/idb.js"></script>
+<script src="../assets/js/settings.js"></script>
+<script src="../assets/js/net.js"></script>
+<script src="../assets/js/cmdpal.js"></script>
+<script src="../assets/js/particles.js"></script>
+<script src="../assets/js/drawer.js"></script>
+<script src="../assets/js/shortcuts.js"></script>
+<script src="../assets/js/sw-register.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var EXPENSE_DB = (window.COFDE && COFDE.EXPENSE_DB) || 'cofde_expense';
+  var $ = function (id) { return document.getElementById(id); };
+
+  COFDE.guard.install();
+  COFDE.settings.init();
+  COFDE.net.init();
+  COFDE.cmdpal.init();
+
+  /* ── Appearance ── */
+  var appearance = $('appearance');
+  var currency = $('currency');
+  var curCode = $('curCode');
+  var curSymbol = $('curSymbol');
+  var customBox = $('customBox');
+  var dateFormat = $('dateFormat');
+
+  function paint() {
+    var s = COFDE.settings.get();
+    appearance.value = s.appearance;
+    currency.value = s.currency;
+    curCode.value = s.customCurrencyCode || '';
+    curSymbol.value = s.customCurrencySymbol || '';
+    customBox.hidden = s.currency !== 'CUSTOM';
+    dateFormat.value = s.dateFormat;
+
+    var sample = 1250000;
+    $('moneyPreview').textContent = COFDE.fmt.money(sample, s);
+    $('datePreview').textContent = COFDE.fmt.formatDate(COFDE.fmt.todayKey(), s.dateFormat);
+  }
+
+  appearance.addEventListener('change', function () {
+    COFDE.settings.set({ appearance: this.value });
+    COFDE.toast.success('Tema diubah.');
+  });
+
+  function commitCurrency() {
+    var patch = { currency: currency.value };
+    if (currency.value === 'CUSTOM') {
+      patch.customCurrencyCode = curCode.value.trim().toUpperCase();
+      patch.customCurrencySymbol = curSymbol.value.trim();
+      if (!patch.customCurrencySymbol) {
+        COFDE.toast.warning('Simbol kosong. Kode dipakai sebagai simbol.');
+      }
+    }
+    COFDE.settings.set(patch);
+    paint();
+  }
+
+  currency.addEventListener('change', commitCurrency);
+  curCode.addEventListener('change', commitCurrency);
+  curSymbol.addEventListener('input', function () {
+    COFDE.settings.set({ customCurrencySymbol: this.value });
+    paint();
+  });
+
+  dateFormat.addEventListener('change', function () {
+    COFDE.settings.set({ dateFormat: this.value });
+    paint();
+    COFDE.toast.success('Format tanggal diubah.');
+  });
+
+  /* ── Data ── */
+  function refreshStorage() {
+    COFDE.idb.usage().then(function (u) {
+      if (!u || !u.quota) { $('storageInfo').textContent = 'Tidak tersedia'; return; }
+      var mb = function (n) { return (n / (1024 * 1024)).toFixed(1) + ' MB'; };
+      $('storageInfo').textContent = mb(u.used) + ' dipakai dari ' + mb(u.quota);
+    });
+  }
+
+  $('exportAll').addEventListener('click', function () {
+    var payload = COFDE.settings.exportAll();
+
+    /* Sertakan expense bila datanya ada, agar "export all" berarti semua. */
+    COFDE.idb.open(EXPENSE_DB, 1, function (db) {
+      if (!db.objectStoreNames.contains('days')) return;
+      var s = db.transaction('days', 'readonly').objectStore('days');
+      var cat = db.objectStoreNames.contains('categories') ? db.transaction('categories', 'readonly').objectStore('categories') : null;
+      s.getAll().onsuccess = function () {
+        var days = s.result || [];
+        payload.expense = { days: days };
+        if (cat) {
+          cat.getAll().onsuccess = function () { payload.expense.categories = cat.result || []; };
+        }
+        var json = JSON.stringify(payload, null, 2);
+        COFDE.fmt.download('cofde-data-' + COFDE.fmt.stamp() + '.json', json, 'application/json');
+        COFDE.toast.success('Semua data diekspor.');
+      };
+    }).catch(function (e) {
+      /* Tetap ekspor bagian settings walau expense gagal dibuka. */
+      var json = JSON.stringify(payload, null, 2);
+      COFDE.fmt.download('cofde-settings-' + COFDE.fmt.stamp() + '.json', json, 'application/json');
+      COFDE.toast.warning('Data expense tidak bisa dibaca, hanya settings yang diekspor.');
+    });
+  });
+
+  $('importFile').addEventListener('change', function () {
+    var f = this.files && this.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var obj = JSON.parse(String(reader.result));
+        COFDE.settings.importAll(obj);
+        paint();
+        COFDE.toast.success('Settings berhasil diimport.');
+      } catch (e) {
+        COFDE.report(e, 'Berkas JSON tidak valid.');
+      }
+    };
+    reader.onerror = function () { COFDE.report(reader.error, 'Gagal membaca berkas.'); };
+    reader.readAsText(f);
+    this.value = '';
+  });
+
+  function confirmThen(msg, fn) {
+    if (!window.confirm(msg + '\n\nThis action cannot be undone.')) {
+      COFDE.toast.info('Dibatalkan.');
+      return;
+    }
+    fn();
+  }
+
+  $('clearExpense').addEventListener('click', function () {
+    confirmThen('Hapus semua data expense (journal, transaksi, budget, kategori)?', function () {
+      COFDE.idb.deleteDatabase(EXPENSE_DB)
+        .then(function () { COFDE.toast.success('Data expense dihapus.'); refreshStorage(); })
+        .catch(function (e) { COFDE.report(e, 'Gagal menghapus data expense.'); });
+    });
+  });
+
+  $('clearAll').addEventListener('click', function () {
+    confirmThen('Hapus SEMUA data lokal COFDE, termasuk expense, budget, dan preferensi?', function () {
+      var jobs = [COFDE.idb.deleteDatabase(EXPENSE_DB)];
+      try {
+        localStorage.removeItem('cofde_settings');
+        localStorage.removeItem('cofde_budget');
+        localStorage.removeItem('fire-theme');
+        localStorage.removeItem('cofde_ops');
+      } catch (e) { /* abaikan */ }
+      Promise.all(jobs.map(function (p) { return p.catch(function () { return false; }); }))
+        .then(function () {
+          COFDE.toast.success('Semua data lokal dihapus. Muat ulang halaman.');
+          setTimeout(function () { location.reload(); }, 1200);
+        });
+    });
+  });
+
+  $('showShortcuts').addEventListener('click', function () {
+    if (window.COFDE_SHORTCUT_HELP) COFDE_SHORTCUT_HELP();
+  });
+
+  /* Ikuti perubahan tema dari halaman lain (mis. lewat drawer). */
+  COFDE.settings.onChange(paint);
+  paint();
+  refreshStorage();
+
+  COFDE.net.badge($('netBadge'));
+})();
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 {
   "name": "COFDE Toolkit",
   "short_name": "COFDE",
-  "description": "Toolkit dokumen statis yang berjalan sepenuhnya di browser. Reader, potong gambar, gabung PDF, merge, split, dan konversi tanpa upload.",
+  "description": "Toolkit dokumen statis yang berjalan sepenuhnya di browser: Reader, potong gambar, gabung PDF, merge, split, konversi, Dev Tools, QR, Maps, dan analisis CSV tanpa upload.",
   "start_url": "../index.html",
   "scope": "../",
   "display": "standalone",
@@ -77,6 +77,26 @@
       "name": "Konversi",
       "short_name": "Konversi",
       "url": "../pages/konversi.html"
+    },
+    {
+      "name": "Dev Tools",
+      "short_name": "Dev Tools",
+      "url": "../pages/devtools.html"
+    },
+    {
+      "name": "QR Tools",
+      "short_name": "QR",
+      "url": "../pages/qr.html"
+    },
+    {
+      "name": "Maps",
+      "short_name": "Maps",
+      "url": "../pages/maps.html"
+    },
+    {
+      "name": "ML CSV Visualizer",
+      "short_name": "ML CSV",
+      "url": "../pages/mlcsv.html"
     }
   ]
 }

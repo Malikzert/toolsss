@@ -18,6 +18,10 @@ Toolkit dokumen statis yang berjalan **sepenuhnya di browser**. Tidak ada server
   - [Konversi](#05-konversi)
   - [Gabung PDF](#06-gabung-pdf)
   - [Pisah PDF](#07-pisah-pdf)
+  - [Dev Tools](#08-dev-tools)
+  - [QR Tools](#09-qr-tools)
+  - [Maps](#10-maps)
+  - [ML CSV Visualizer](#11-ml-csv-visualizer)
 - [Pintasan Keyboard](#pintasan-keyboard)
 - [Pemasangan sebagai Aplikasi](#pemasangan-sebagai-aplikasi)
 - [Tema](#tema)
@@ -54,7 +58,7 @@ Tidak perlu install apa pun.
 2. Klik tombol menu di pojok kiri atas
 3. Pilih fitur yang diperlukan
 
-Ada 7 tool di dalam COFDE: Dashboard, Reader, Potong Gambar, Gabung ke PDF, Konversi, Gabung PDF, dan Pisah PDF.
+Ada 11 tool di dalam COFDE: Dashboard, Reader, Potong Gambar, Gabung ke PDF, Konversi, Gabung PDF, Pisah PDF, Dev Tools, QR, Maps, dan ML CSV Visualizer.
 
 Kalau halaman masih menampilkan versi lama, paksa refresh dengan **Ctrl+Shift+R**.
 
@@ -72,7 +76,7 @@ Ringkasan seluruh fitur dalam satu tampilan.
 |---|---|
 | **Speedometer** | Gauge "Optimal Load" dengan jarum beranimasi, sudut 270 derajat |
 | **Total Operations** | Counter operasi sesi, tersimpan di localStorage |
-| **Available Tools** | Mini-card untuk Reader, Potong, Gabung, Konversi, Gabung PDF, dan Pisah PDF |
+| **Available Tools** | Mini-card untuk Reader, Potong, Gabung, Konversi, Gabung PDF, Pisah PDF, dan 4 tool baru |
 | **Resource Usage** | Bar Memory, Canvas, dan IO, ditambah estimasi FPS |
 
 Semua angka pada Dashboard bersifat **simulasi visual** untuk memberi kesan hidup, bukan telemetry sungguhan. Yang benar-benar disimulasikan hanya `Total Operations`, yang naik setiap kamu menekan tool.
@@ -270,6 +274,79 @@ Mode **Extract** berguna untuk mengambil halaman tertentu saja, misalnya lampira
 
 ---
 
+### 08 Dev Tools
+
+Kumpulan utilitas developer dalam satu halaman, semuanya berjalan di browser tanpa mengirim data ke mana pun.
+
+| Utilitas | Fungsi |
+|---|---|
+| **JSON** | Format, minify, validasi, dan konversi ke CSV |
+| **Base64** | Encode/decode UTF-8 |
+| **URL** | Encode, decode, parse, dan build URL |
+| **JWT** | Decode payload read-only dengan peringatan "TIDAK diverifikasi" |
+| **UUID** | Generate UUID v4, batch hingga beberapa sekaligus |
+| **Regex** | Tester biasa + tester dengan preset pola umum |
+| **Hash** | SHA-256, SHA-384, SHA-512 via Web Crypto |
+| **Waktu** | Konversi epoch/timestamp, interval waktu, durasi |
+| **Warna** | Konversi format dan cek kontras WCAG |
+| **Cron** | Parse, deskripsi, next schedule, dan preset |
+| **Markdown** | Pratinjau dengan sanitasi HTML (anti-XSS) |
+| **SQL** | Format dan pemeriksaan ringan tanpa eksekusi |
+
+---
+
+### 09 QR Tools
+
+Membuat kode QR dan memindainya, tanpa platform pihak ketiga.
+
+**Buat QR:**
+
+1. Ketik teks (dikodekan UTF-8) atau warnai QR
+2. Pilih ukuran modul dan margin
+3. **Unduh PNG** atau salin sebagai gambar
+4. Mode **Deskripsi** menampilkan detail matrix (versi, mode byte, jumlah modul)
+
+**Pindai QR:**
+
+- **Kamera** memakai `BarcodeDetector` bawaan browser
+- **File** memakai jsQR untuk memindai dari gambar/PNG yang diunggah
+- Hasil ditampilkan dan bisa disalin
+
+> **Offline:** generator butuh pustaka `qrcode-generator` dari CDN. Jika offline dan pustaka belum pernah dimuat, tool menolak **secara eksplisit** dan tidak pernah membuat QR yang salah diam-diam. Setelah pustaka pernah ter-cache, semua fitur berjalan offline.
+
+---
+
+### 10 Maps
+
+Peta interaktif dengan penanda, koordinat, dan geocoding. Bagian peta butuh internet, tetapi navigasi, koordinat, DMS, dan tautan eksternal selalu tersedia.
+
+- **Klik peta** untuk memindahkan penanda
+- **Stats** menampilkan koordinat desimal (DD) dan DMS, kira-kira lokasi, dan status "Di Indonesia?"
+- **Cari tempat** memakai Nominatim (OpenStreetMap), maksimal 1 permintaan per detik
+- **Lokasi** memakai geolocation browser
+- **Tautan eksternal** ke Google Maps, OpenStreetMap, Bing, dan HERE Places
+- Peta memakai Leaflet 1.9.4 dari CDN; kepingan peta (tile) tidak di-cache
+
+---
+
+### 11 ML CSV Visualizer
+
+Analisis ringkas dataset tabel dari file CSV/TSV atau teks tempelan, semua dihitung di browser.
+
+| Fitur | Fungsi |
+|---|---|
+| **Tipe kolom** | Deteksi otomatis: numerik, boolean, tanggal, kategori, teks |
+| **Statistik** | Count, kosong, terisi, unik, contoh per kolom |
+| **Distribusi** | Histogram kolom numerik dan distribusi kategori |
+| **Korelasi** | Matriks Pearson antar kolom numerik |
+| **Regresi linear** | Slope, intercept, r/r², MSE, persamaan garis |
+| **Outlier** | Deteksi IQR (bounds ±1.5×IQR) |
+| **Split train/test** | Deterministik (seed), preview hasil bagi |
+
+Generator angka acak memakai seed, jadi hasil split dapat direproduksi. Data di atas 100.000 baris memicu peringatan karena semua perhitungan berjalan di thread utama.
+
+---
+
 ## Pintasan Keyboard
 
 Shortcut aktif di semua halaman tool, dan otomatis dinonaktifkan saat kamu mengetik di kolom isian, textarea, atau elemen yang bisa diedit.
@@ -300,7 +377,7 @@ COFDE adalah PWA, jadi bisa dipasang ke layar utama dan dibuka dalam jendela sen
 
 1. Buka situs memakai Chrome atau Edge di desktop, atau Safari di iOS
 2. Klik ikon install di address bar, atau menu **Install app** / **Add to Home Screen**
-3. Setelah terpasang, aplikasi punya ikon COFDE dan 7 shortcut ke tiap tool
+3. Setelah terpasang, aplikasi punya ikon COFDE dan shortcut ke tiap tool
 
 Service worker menyimpan shell aplikasi dan library CDN, sehingga pembukaan berikutnya tidak selalu butuh internet. Data dokumen kamu tidak pernah masuk ke cache tersebut, karena seluruh pemrosesan terjadi di memori tab.
 
@@ -361,16 +438,23 @@ Buka `http://localhost:3000`
 |   |-- konversi.html                # 05 Konversi + mode batch
 |   |-- merge.html                   # 06 Gabung PDF + bookmark
 |   `-- split.html                   # 07 Pisah PDF
+|   |-- devtools.html                # 08 Dev Tools
+|   |-- qr.html                      # 09 QR Tools
+|   |-- maps.html                    # 10 Maps
+|   `-- mlcsv.html                   # 11 ML CSV Visualizer
 |-- assets/
 |   |-- css/style.css                # Tema, drawer, glassmorphism, Valorant
 |   `-- js/
 |       |-- drawer.js                # Sidebar, theme switcher, brand corner
 |       |-- particles.js             # Glass shards, bokeh, mouse flecks
 |       |-- shortcuts.js             # Pintasan keyboard global
-|       `-- sw-register.js           # Registrasi service worker
+|       |-- sw-register.js           # Registrasi service worker
+|       |-- devtools.js / devtools-page.js     # 08 Logika + controller halaman
+|       |-- qr.js / qr-page.js                 # 09 Logika + controller halaman
+|       |-- maps.js / maps-page.js             # 10 Logika + controller halaman
+|       `-- mlcsv.js / mlcsv-page.js           # 11 Logika + controller halaman
 |-- pwa/
-|   |-- manifest.webmanifest         # Manifest, icon, dan 7 shortcut
-|   |-- sw.js                        # Service worker, cache shell + CDN
+|   |-- manifest.webmanifest         # Manifest, icon, dan shortcut
 |   `-- icons/                       # icon.svg + PNG 192/512 dan maskable
 |-- server.js                        # Dev server lokal, tidak dipakai Pages
 `-- README.md
@@ -397,6 +481,10 @@ Buka `http://localhost:3000`
 | Banyak file sekaligus | Konversi | Nyalakan **Batch**, lalu unduh ZIP |
 | Arsip beberapa PDF | Gabung PDF | Bookmark aktif, metadata dari berkas pertama |
 | Pisahkan lampiran | Pisah PDF | Mode **Extract** dengan nomor halaman |
+| Debug JSON/URL/hash | Dev Tools | Panel JSON, Base64, URL, hash |
+| Undang QR kartu nama | QR Tools | Teks vCard, gratis |
+| Koordinat untuk laporan | Maps | Klik peta, salin DD/DMS |
+| Cek dataset sebelum latih | ML CSV | Split train/test pakai seed tetap |
 
 **Untuk performa:**
 
@@ -419,8 +507,8 @@ Buka `http://localhost:3000`
 
 - Sepenuhnya client-side. **Tidak ada file yang diunggah ke server mana pun**, karena repo ini tidak memiliki backend.
 - Tidak ada analytics, tidak ada tracking, tidak ada cookie.
-- Penyimpanan lokal hanya berisi `fire-theme` untuk tema aktif dan `cofde_ops` untuk counter dashboard.
-- Satu-satunya request keluar adalah pemuatan library dari CDN publik.
+- Penyimpanan lokal hanya berisi `fire-theme` (tema), `cofde_ops` (counter dashboard), preferensi Ringkas/Budget di localStorage, dan basis data IndexedDB `cofde_expense` untuk riwayat pengeluaran.
+- Satu-satunya request keluar adalah pemuatan library dari CDN publik, dan pencarian/geocoding Maps yang dikirim ke Nominatim (OpenStreetMap) saat kamu menekan tombol Cari.
 - Isi dokumen hanya ada di memori tab dan hilang saat tab ditutup atau di-refresh.
 - Kerahasiaan berkas tetap menjadi tanggung jawab perangkat dan browser yang kamu pakai.
 
@@ -445,6 +533,15 @@ Beberapa pembaca mobile masih tidak mendukung bookmark. Isi PDF dan bookmark-nya
 
 **Kartu konversi tidak muncul atau tombol tidak merespons**
 Library CDN gagal dimuat. Periksa koneksi internet lalu refresh. Butuh beberapa detik tambahan bila CDN sedang lambat.
+
+**Peta Maps kosong atau tidak tampil**
+Tile peta selalu butuh internet. Jika offline dan Leaflet belum pernah dimuat, muncul pesan eksplisit dan halaman tetap bisa dipakai untuk koordinat, DMS, dan tautan eksternal. Setelah pernah dimuat online, peta tetap terbuka offline tetapi petaknya kosong.
+
+**QR tidak muncul saat offline**
+Pustaka qrcode-generator hanya di-cache setelah pernah dimuat. Saat offline dan belum pernah ter-cache, tool menolak dengan jelas (tidak membuat QR yang salah). Muat sekali saat online.
+
+**Hasil split ML CSV berbeda ketika seed sama**
+Bukan. Split memakai PRNG seed, hasil selalu deterministik. Pastikan urutan baris dan header sama sebelum membandingkan.
 
 **Reader tidak menampilkan teks**
 Berkas PDF hasil scan, yaitu berupa gambar dan bukan teks. Karena tidak ada text layer, teks tidak dapat diseleksi dan tidak dapat dicari.
@@ -477,6 +574,10 @@ Library pihak ketiga yang dimuat lewat CDN dan tidak di-bundle ke dalam repo:
 | [docx](https://github.com/dolanmiu/docx) 8.5.0 | Konversi | Generate PDF ke DOCX |
 | [jsPDF](https://github.com/parallax/jsPDF) 2.5.1 | Gabung Gambar | Generate PDF beserta watermark |
 | [JSZip](https://stuk.github.io/jszip/) 3.10.1 | Potong, Konversi | Bundle hasil dan hasil batch ke ZIP |
+| [Chart.js](https://www.chartjs.org/) 4.4.1 | Ringkas Pengeluaran | Grafik pengeluaran |
+| [qrcode-generator](https://kazuhikoarase.github.io/qrcode-generator/) 1.4.4 | QR Tools | Membuat matrix kode QR |
+| [jsQR](https://github.com/cozmo/jsQR) 1.4.0 | QR Tools | Memindai QR dari gambar |
+| [Leaflet](https://leafletjs.com/) 1.9.4 | Maps | Peta interaktif + marker |
 
 Lisensi tiap library mengikuti lisensi masing-masing proyeknya.
 
@@ -499,5 +600,14 @@ Tidak ada build step dan tidak ada proses dependency install. Push ke `main` aka
 ```bash
 node --check assets/js/shortcuts.js
 node --check assets/js/sw-register.js
+node --check assets/js/devtools.js
+node --check assets/js/devtools-page.js
+node --check assets/js/qr.js
+node --check assets/js/qr-page.js
+node --check assets/js/maps.js
+node --check assets/js/maps-page.js
+node --check assets/js/mlcsv.js
+node --check assets/js/mlcsv-page.js
 node --check pwa/sw.js
+node -e "JSON.parse(require('fs').readFileSync('pwa/manifest.webmanifest','utf8'))"
 ```

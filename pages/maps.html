@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maps &mdash; COFDE Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
+</head>
+<body>
+<div class="cx-page">
+
+  <header class="cx-head">
+    <div>
+      <h1 class="cx-title">Maps</h1>
+      <p class="cx-sub">Peta OpenStreetMap dengan pencarian lokasi. Batu peta (tile) butuh internet; koordinat dan tautan tetap dapat disalin.</p>
+    </div>
+    <span id="netBadge" class="cx-net"><span class="cx-net-dot"></span>Online</span>
+  </header>
+
+  <section class="cx-card">
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Cari lokasi di Indonesia</span>
+        <input type="text" id="mapSearch" class="cx-input" placeholder="mis. Monas, Jakarta, Bandung" autocomplete="off">
+      </label>
+      <div class="cx-field">
+        <span class="cx-label">&nbsp;</span>
+        <div class="cx-actions">
+          <button class="cx-btn cx-btn-primary" id="mapGo" type="button">Cari</button>
+          <button class="cx-btn" id="mapLocate" type="button">Lokasi saya</button>
+        </div>
+      </div>
+    </div>
+    <div id="mapResult"></div>
+    <div id="mapBox" style="height:420px;border-radius:10px;overflow:hidden;background:#e8eaed"></div>
+    <div class="cx-stats" id="mapStats">
+      <div class="cx-stat"><div class="cx-stat-label">Koordinat</div><div class="cx-stat-value cx-mono" style="font-size:13px">-</div></div>
+      <div class="cx-stat"><div class="cx-stat-label">DMS</div><div class="cx-stat-value cx-mono" style="font-size:13px">-</div></div>
+      <div class="cx-stat"><div class="cx-stat-label">Lokasi</div><div class="cx-stat-value" style="font-size:13px">-</div></div>
+    </div>
+    <div class="cx-actions">
+      <button class="cx-btn" id="mapCopy" type="button">Salin koordinat</button>
+      <button class="cx-btn" id="mapExternGoogle" type="button">Buka di Google Maps</button>
+      <button class="cx-btn" id="mapExternOsm" type="button">Buka di OpenStreetMap</button>
+      <button class="cx-btn" id="mapExternHere" type="button">Buka di HERE</button>
+    </div>
+    <p class="cx-note" id="mapNote">Klik peta untuk menandai titik. Pencarian memakai Nominatim (OpenStreetMap), maks 1 permintaan per detik.</p>
+  </section>
+
+</div>
+
+<script src="../assets/js/toast.js"></script>
+<script src="../assets/js/guard.js"></script>
+<script src="../assets/js/fmt.js"></script>
+<script src="../assets/js/settings.js"></script>
+<script src="../assets/js/net.js"></script>
+<script src="../assets/js/cmdpal.js"></script>
+<script src="../assets/js/maps.js"></script>
+<script src="../assets/js/particles.js"></script>
+<script src="../assets/js/drawer.js"></script>
+<script src="../assets/js/shortcuts.js"></script>
+<script src="../assets/js/sw-register.js"></script>
+<script src="../assets/js/maps-page.js"></script>
+</body>
+</html>

@@ -12,7 +12,13 @@
     { href: 'gabung.html',    label: 'Gabung ke PDF' },
     { href: 'merge.html',     label: 'Merge PDF' },
     { href: 'split.html',     label: 'Split PDF' },
-    { href: 'konversi.html',  label: 'Konversi' }
+    { href: 'konversi.html',  label: 'Konversi' },
+    { href: 'expense.html',   label: 'Expense Tracker' },
+    { href: 'maps.html',      label: 'Maps' },
+    { href: 'qr.html',        label: 'QR Code Tools' },
+    { href: 'mlcsv.html',     label: 'ML CSV Visualizer' },
+    { href: 'devtools.html',  label: 'Developer Tools' },
+    { href: 'settings.html',  label: 'Settings' }
   ];
 
   /* Sahabat yang elegan diproses lewat click() biasa, sehingga setiap tool
@@ -138,6 +144,7 @@
 
     var rows = [
       ['[  /  ]', 'Halaman tool sebelumnya / berikutnya'],
+      ['Ctrl + K', 'Pencarian global (semua tool)'],
       ['T  /  Y', 'Ganti tema maju / mundur'],
       ['D', 'Pilih file (area upload)'],
       ['O', 'Buka dialog berkas'],
