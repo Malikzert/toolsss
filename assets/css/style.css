@@ -751,6 +751,94 @@ h1 {
   text-transform: uppercase;
 }
 
+/* ── Refresh paksa: gasing berputar + percikan api ── */
+.vx-refresh {
+  position: fixed;
+  top: 1rem;
+  left: 8.5rem;
+  z-index: var(--vx-z-toggle);
+  width: 2.45rem;
+  height: 2.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: var(--vx-bg);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 11px 100%);
+  color: var(--vx-fg);
+  cursor: pointer;
+  transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  outline: none;
+}
+
+.vx-refresh:hover {
+  background: color-mix(in srgb, var(--accent) 24%, var(--vx-bg));
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 38%, transparent);
+  transform: translateY(-1px);
+}
+
+/* Cincin panah refresh, diam sampai hover. */
+.vx-refresh-ring {
+  position: absolute;
+  inset: 0.55rem;
+  border: 2px solid transparent;
+  border-top-color: var(--accent);
+  border-right-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 50%;
+  transition: transform 0.4s ease;
+}
+
+.vx-refresh:hover .vx-refresh-ring {
+  transform: rotate(120deg);
+}
+
+/* Gasing (spinning top) tampil saat memuat paksa. */
+.vx-top {
+  position: absolute;
+  inset: 0.4rem;
+  display: none;
+}
+
+.vx-refresh.spinning .vx-top { display: block; animation: vx-gasing 0.9s linear infinite; }
+.vx-refresh.spinning .vx-refresh-ring { animation: vx-ring 0.9s linear infinite; }
+
+.vx-top i {
+  position: absolute;
+  inset: 0.4rem 0 0;
+  background: conic-gradient(from 0deg, var(--accent), #ffc46b, var(--accent));
+  clip-path: polygon(50% 0, 100% 72%, 50% 100%, 0 72%);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 70%, transparent));
+}
+
+.vx-top b {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 0.45rem;
+  background: var(--vx-fg);
+  transform: translateX(-50%);
+}
+
+@keyframes vx-gasing {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes vx-ring {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vx-refresh.spinning .vx-top,
+  .vx-refresh.spinning .vx-refresh-ring,
+  .vx-refresh:hover .vx-refresh-ring { animation: none; }
+}
+
 /* ── Blink: light sweep on open ── */
 .vx-blink {
   position: absolute;

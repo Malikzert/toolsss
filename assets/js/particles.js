@@ -174,6 +174,61 @@
     ctx.restore();
   }
 
+  /* ── Percikan api (ember) ──
+     Dipakai saat tombol refresh paksa ditekan. */
+  var EMBER = ['#ff8a3d', '#ffc46b', '#ff4655', '#ffe3b3', '#ff7a2f'];
+  var sparks = [];
+  var MAX_SPARKS = 180;
+
+  function spawnSpark(x, y) {
+    var ang = -Math.PI / 2 + (Math.random() - 0.5) * 2.4;
+    var sp = 1.4 + Math.random() * 3.6;
+    return {
+      x: x + (Math.random() - 0.5) * 18,
+      y: y + (Math.random() - 0.5) * 18,
+      w: 1.4 + Math.random() * 2.6,
+      h: 2 + Math.random() * 4.5,
+      rot: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 0.22,
+      vx: Math.cos(ang) * sp,
+      vy: Math.sin(ang) * sp,
+      gravity: 0.1 + Math.random() * 0.09,
+      life: 1,
+      decay: 0.012 + Math.random() * 0.014,
+      tint: pick(EMBER)
+    };
+  }
+
+  function spark(x, y, count) {
+    if (reduceMotion) return;
+    var n = Math.min(count || 42, MAX_SPARKS);
+    for (var i = 0; i < n; i++) {
+      if (sparks.length >= MAX_SPARKS) sparks.shift();
+      sparks.push(spawnSpark(x, y));
+    }
+  }
+
+  function drawSparks() {
+    for (var i = 0; i < sparks.length; i++) {
+      var s = sparks[i];
+      if (s.life <= 0.01) continue;
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.rot);
+      ctx.globalAlpha = s.life;
+      ctx.shadowBlur = 16;
+      ctx.shadowColor = s.tint;
+      ctx.fillStyle = s.tint;
+      ctx.beginPath();
+      ctx.moveTo(0, -s.h / 2);
+      ctx.lineTo(s.w / 2, s.h / 2);
+      ctx.lineTo(-s.w / 2, s.h / 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
   /* ── Draw: ambient glass shards ── */
   function drawShards() {
     for (var i = 0; i < shards.length; i++) paintShard(shards[i], shards[i].alpha);
@@ -221,9 +276,21 @@
       if (f.life <= 0 || f.y > H + 40) flecks.splice(k, 1);
     }
 
+    for (var s2 = sparks.length - 1; s2 >= 0; s2--) {
+      var sp = sparks[s2];
+      sp.vy += sp.gravity;
+      sp.vx *= 0.975;
+      sp.rot += sp.vr;
+      sp.x += sp.vx;
+      sp.y += sp.vy;
+      sp.life -= sp.decay;
+      if (sp.life <= 0 || sp.y > H + 40) sparks.splice(s2, 1);
+    }
+
     drawMotes();
     drawShards();
     drawFlecks();
+    drawSparks();
 
     requestAnimationFrame(loop);
   }
@@ -259,5 +326,10 @@
     get: function () { return currentTheme; },
     set: setTheme,
     paint: paint
+  };
+
+  /* Percikan api untuk efek tombol refresh. */
+  window.COFDE_FX = {
+    spark: spark
   };
 })();

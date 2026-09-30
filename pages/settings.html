@@ -26,12 +26,13 @@
     <label class="cx-field">
       <span class="cx-label">Tema</span>
       <select id="appearance" class="cx-select">
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
+        <option value="lightholy">Lightholy</option>
+        <option value="darkside">Darkside</option>
+        <option value="abyss">Abyss</option>
         <option value="system">System (ikuti perangkat)</option>
       </select>
     </label>
-    <p class="cx-note">Light memakai tema Lightholy, Dark memakai Darkside, dan System mengikuti setelan perangkat lalu memilih Abyss saat mode gelap.</p>
+    <p class="cx-note">Pilih tema yang sama dengan chip di menu. Perubahan di sini dan di chip sidebar langsung saling menyesuaikan di semua fitur.</p>
   </section>
 
   <section class="cx-card">
@@ -138,9 +139,13 @@
 
   function paint() {
     var s = COFDE.settings.get();
-    /* Radio hanya light/dark/system; kalau temanya dipilih lewat chip
-       drawer (nilai konkret), tampilkan sebagai 'system'. */
-    appearance.value = (s.appearance === 'light' || s.appearance === 'dark') ? s.appearance : 'system';
+    /* Radio/select tema memakai nama tema yang sama dengan chip sidebar;
+     nilai lama 'light'/'dark' dipetakan supaya tidak pernah blank. */
+    var ap = s.appearance;
+    if (ap === 'light') ap = 'lightholy';
+    else if (ap === 'dark') ap = 'darkside';
+    if (['lightholy', 'darkside', 'abyss', 'system'].indexOf(ap) < 0) ap = 'system';
+    appearance.value = ap;
     currency.value = s.currency;
     curCode.value = s.customCurrencyCode || '';
     curSymbol.value = s.customCurrencySymbol || '';

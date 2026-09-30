@@ -71,11 +71,6 @@
     current = get();
     Object.keys(patch).forEach(function (k) { current[k] = patch[k]; });
     var ok = save();
-    if (patch.appearance === 'system') {
-      /* Pengguna memilih 'system' secara eksplisit: hapus pilihan chip
-         supaya tema benar-benar mengikuti OS. */
-      try { localStorage.removeItem('fire-theme'); } catch (e) { /* abaikan */ }
-    }
     listeners.forEach(function (fn) {
       try { fn(current, patch); } catch (e) { if (window.console) console.error(e); }
     });
@@ -95,46 +90,28 @@
     return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   }
 
-  /* 'system' berarti ikuti OS; kalau tidak, pakai tema eksplisit.
-     Prioritas (yang tersimpan eksplisit menang; chip hanya dipakai
-     saat 'system' yang artinya "tidak ada paksaan"):
-       1. appearance tersimpan eksplisit: 'light'/'dark' atau nama
-          tema konkret (lightholy/darkside/abyss)
-       2. kalau appearance 'system': chip tema di drawer terakhir
-          (localStorage 'fire-theme'), termasuk pilihan dari halaman
-          lama yang tidak memakai settings.js
-       3. 'system' tanpa chip -> ikuti OS
-     Ini mencegah pilihan Light/Dark ditimpa sisa tema lama. */
+  /* Sumber kebenaran tunggal tema adalah 'cofde_settings'.appearance:
+     - 'lightholy'/'darkside'/'abyss' = tema tetap
+     - 'system'                         = ikuti OS
+     - 'light'/'dark'                   = nilai lama, dipetakan di sini
+     'fire-theme' hanya cermin untuk halaman lama yang tidak memuat
+     settings.js, jadi tema selalu sama di semua fitur. */
   function resolvedTheme() {
     var s = get();
     if (s.appearance === 'dark') return 'darkside';
     if (s.appearance === 'light') return 'lightholy';
     if (['lightholy', 'darkside', 'abyss'].indexOf(s.appearance) >= 0) return s.appearance;
-    var fresh = null;
-    try { fresh = localStorage.getItem('fire-theme'); } catch (e) { fresh = null; }
-    if (fresh && ['lightholy', 'darkside', 'abyss'].indexOf(fresh) >= 0) return fresh;
     return prefersDark() ? 'abyss' : 'lightholy';
   }
 
   function applyAppearance() {
     var theme = resolvedTheme();
-    var forced = get().appearance !== 'system';
     document.documentElement.setAttribute('data-theme', theme);
     if (window.COFDE_THEME && typeof COFDE_THEME.set === 'function') {
-      try {
-        if (forced) {
-          /* Radio Light/Dark = preferensi tetap: ikut ditulis ke
-             'fire-theme' supaya halaman lama (tanpa settings.js)
-             juga sama. */
-          COFDE_THEME.set(theme);
-        } else if (typeof COFDE_THEME.paint === 'function') {
-          /* 'system' atau chip: cukup ubah tampilan, JANGAN menimpa
-             pilihan chip di localStorage. */
-          COFDE_THEME.paint(theme);
-        } else {
-          COFDE_THEME.set(theme);
-        }
-      } catch (e) { /* abaikan */ }
+      /* Selalu tulis cermin 'fire-theme' supaya halaman lama (reader,
+         crop, gabung, merge, split, konversi, dashboard) memakai tema
+         yang sama persis dengan halaman yang memuat settings.js. */
+      try { COFDE_THEME.set(theme); } catch (e) { /* abaikan */ }
     }
     /* Sinkronkan chip tema di drawer bila ada. */
     document.querySelectorAll('.vx-theme').forEach(function (b) {

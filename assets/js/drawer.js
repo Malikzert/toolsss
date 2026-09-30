@@ -102,12 +102,78 @@
   var flash = document.createElement('div');
   flash.className = 'vx-flash';
 
+  /* ── Refresh paksa: efek gasing + percikan api ── */
+  var refresh = document.createElement('button');
+  refresh.type = 'button';
+  refresh.className = 'vx-refresh';
+  refresh.setAttribute('aria-label', 'Muat ulang paksa');
+  refresh.title = 'Muat ulang paksa';
+  refresh.innerHTML =
+    '<span class="vx-top" aria-hidden="true"><i></i><b></b></span>' +
+    '<span class="vx-refresh-ring" aria-hidden="true"></span>';
+
+  var refreshing = false;
+  function forceReload() {
+    if (refreshing) return;
+    refreshing = true;
+    refresh.classList.add('spinning');
+    refresh.setAttribute('aria-busy', 'true');
+
+    var r = refresh.getBoundingClientRect();
+    if (window.COFDE_FX && typeof COFDE_FX.spark === 'function') {
+      COFDE_FX.spark(r.left + r.width / 2, r.top + r.height / 2, 46);
+      window.setTimeout(function () {
+        COFDE_FX.spark(r.left + r.width / 2, r.top + r.height / 2, 26);
+      }, 170);
+    }
+
+    /* Buang cache app supaya berkas terunduh ulang, lalu muat halaman. */
+    window.setTimeout(function () {
+      try {
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (reg) { reg.unregister(); });
+          }).catch(function () {});
+        }
+      } catch (e) { /* abaikan */ }
+      try {
+        if (window.caches && caches.keys) {
+          caches.keys().then(function (keys) {
+            keys.forEach(function (k) { caches.delete(k); });
+          }).catch(function () {});
+        }
+      } catch (e2) { /* abaikan */ }
+      location.reload();
+    }, reduceMotion ? 60 : 520);
+  }
+
+  refresh.addEventListener('click', function (e) {
+    e.stopPropagation();
+    forceReload();
+  });
+
   drawer.id = 'vx-drawer';
   document.body.appendChild(scrim);
   document.body.appendChild(corner);
   document.body.appendChild(drawer);
   document.body.appendChild(toggle);
+  document.body.appendChild(refresh);
   document.body.appendChild(flash);
+
+  /* Tombol refresh duduk tepat di kanan tombol Menu, mengikuti lebar
+     tombolnya (label bisa berubah(font) atau layar mengecil). */
+  function placeRefresh() {
+    if (!toggle.parentNode) return;
+    var r = toggle.getBoundingClientRect();
+    refresh.style.left = Math.round(r.right + 8) + 'px';
+    refresh.style.top = Math.round(r.top) + 'px';
+  }
+  placeRefresh();
+  window.addEventListener('resize', placeRefresh);
+  if (document.fonts && document.fonts.ready && document.fonts.ready.then) {
+    document.fonts.ready.then(placeRefresh).catch(function () {});
+  }
+  window.setTimeout(placeRefresh, 600);
 
   /* ── Retrigger Helper ── */
   function replay(el, cls) {
@@ -263,6 +329,12 @@
     if (!key || key === api.get()) return;
 
     api.set(key);
+
+    /* Sinkronkan ke settings: appearance jadi sumber kebenaran tunggal,
+       jadi pilihan di Settings ikut berubah dan sebaliknya. */
+    if (window.COFDE && COFDE.settings && typeof COFDE.settings.set === 'function') {
+      try { COFDE.settings.set({ appearance: key }); } catch (err) { /* abaikan */ }
+    }
 
     drawer.querySelectorAll('.vx-theme').forEach(function (b) {
       var on = b.dataset.theme === key;

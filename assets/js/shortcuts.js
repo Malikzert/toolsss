@@ -72,6 +72,12 @@
     var next = keys[(i + dir + keys.length) % keys.length];
     api.set(next);
 
+    /* Sinkronkan ke settings supaya pilihan tema di Settings dan chip
+       di drawer selalu sama. */
+    if (window.COFDE && COFDE.settings && typeof COFDE.settings.set === 'function') {
+      try { COFDE.settings.set({ appearance: next }); } catch (e) { /* abaikan */ }
+    }
+
     /* sinkronkan tombol tema di drawer bila sedang terbuka */
     document.querySelectorAll('.vx-theme').forEach(function (b) {
       var on = b.dataset.theme === next;
