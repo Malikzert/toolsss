@@ -229,16 +229,21 @@
   }
 
   /* ── Theme Control ── */
-  function setTheme(theme) {
+  function paint(theme) {
     if (!THEMES[theme]) return;
     currentTheme = theme;
     document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
 
     /* Respawn with new tints immediately */
     shards.length = 0;
     motes.length = 0;
     flecks.length = 0;
+  }
+
+  function setTheme(theme) {
+    if (!THEMES[theme]) return;
+    paint(theme);
+    try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
   }
 
   /* ── Init ── */
@@ -252,6 +257,7 @@
   window.COFDE_THEME = {
     themes: THEMES,
     get: function () { return currentTheme; },
-    set: setTheme
+    set: setTheme,
+    paint: paint
   };
 })();

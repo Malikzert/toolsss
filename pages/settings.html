@@ -138,7 +138,9 @@
 
   function paint() {
     var s = COFDE.settings.get();
-    appearance.value = s.appearance;
+    /* Radio hanya light/dark/system; kalau temanya dipilih lewat chip
+       drawer (nilai konkret), tampilkan sebagai 'system'. */
+    appearance.value = (s.appearance === 'light' || s.appearance === 'dark') ? s.appearance : 'system';
     currency.value = s.currency;
     curCode.value = s.customCurrencyCode || '';
     curSymbol.value = s.customCurrencySymbol || '';

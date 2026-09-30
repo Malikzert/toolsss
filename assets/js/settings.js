@@ -66,6 +66,11 @@
     current = get();
     Object.keys(patch).forEach(function (k) { current[k] = patch[k]; });
     var ok = save();
+    if (patch.appearance === 'system') {
+      /* Pengguna memilih 'system' secara eksplisit: hapus pilihan chip
+         supaya tema benar-benar mengikuti OS. */
+      try { localStorage.removeItem('fire-theme'); } catch (e) { /* abaikan */ }
+    }
     listeners.forEach(function (fn) {
       try { fn(current, patch); } catch (e) { if (window.console) console.error(e); }
     });
@@ -85,20 +90,45 @@
     return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   }
 
-  /* 'system' berarti ikuti OS; kalau tidak, pakai tema eksplisit. */
+  /* 'system' berarti ikuti OS; kalau tidak, pakai tema eksplisit.
+     Prioritas pilihan tema (yang terakhir diinginkan pengguna menang):
+       1. radio Light/Dark yang dipilih eksplisit di Settings
+       2. chip tema di drawer (localStorage 'fire-theme') — termasuk
+          pilihan dari halaman lama yang tidak memakai settings.js
+       3. migration/konkret historis
+       4. 'system' -> ikuti OS
+     Ini mencegah pilihan chip ditimpa tebakan 'system' ketika membuka
+     Expense Tracker (halaman yang memanggil settings.init()). */
   function resolvedTheme() {
     var s = get();
     if (s.appearance === 'dark') return 'darkside';
     if (s.appearance === 'light') return 'lightholy';
-    /* system: dark OS -> abyss, light OS -> lightholy */
+    var fresh = null;
+    try { fresh = localStorage.getItem('fire-theme'); } catch (e) { fresh = null; }
+    if (fresh && ['lightholy', 'darkside', 'abyss'].indexOf(fresh) >= 0) return fresh;
+    if (['lightholy', 'darkside', 'abyss'].indexOf(s.appearance) >= 0) return s.appearance;
     return prefersDark() ? 'abyss' : 'lightholy';
   }
 
   function applyAppearance() {
     var theme = resolvedTheme();
+    var forced = ['light', 'dark'].indexOf(get().appearance) >= 0;
     document.documentElement.setAttribute('data-theme', theme);
     if (window.COFDE_THEME && typeof COFDE_THEME.set === 'function') {
-      try { COFDE_THEME.set(theme); } catch (e) { /* abaikan */ }
+      try {
+        if (forced) {
+          /* Radio Light/Dark = preferensi tetap: ikut ditulis ke
+             'fire-theme' supaya halaman lama (tanpa settings.js)
+             juga sama. */
+          COFDE_THEME.set(theme);
+        } else if (typeof COFDE_THEME.paint === 'function') {
+          /* 'system' atau chip: cukup ubah tampilan, JANGAN menimpa
+             pilihan chip di localStorage. */
+          COFDE_THEME.paint(theme);
+        } else {
+          COFDE_THEME.set(theme);
+        }
+      } catch (e) { /* abaikan */ }
     }
     /* Sinkronkan chip tema di drawer bila ada. */
     document.querySelectorAll('.vx-theme').forEach(function (b) {
@@ -140,7 +170,7 @@
     ['appearance', 'currency', 'dateFormat', 'customCurrencyCode', 'customCurrencySymbol'].forEach(function (k) {
       if (obj.settings[k] !== undefined) patch[k] = obj.settings[k];
     });
-    if (patch.appearance && ['light', 'dark', 'system'].indexOf(patch.appearance) < 0) {
+    if (patch.appearance && ['light', 'dark', 'system', 'lightholy', 'darkside', 'abyss'].indexOf(patch.appearance) < 0) {
       throw new Error('Nilai appearance tidak valid: ' + patch.appearance);
     }
     set(patch);
