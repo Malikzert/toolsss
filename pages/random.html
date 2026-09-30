@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Picker &mdash; COFDE Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/picker.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
+</head>
+<body>
+<div class="cx-page">
+
+  <header class="cx-head">
+    <div>
+      <h1 class="cx-title">Random Picker</h1>
+      <p class="cx-sub">Acak nama dari daftarmu, lempar koin, atau minta jawaban ya/tidak.</p>
+    </div>
+    <span id="netBadge" class="cx-net"><span class="cx-net-dot"></span>Online</span>
+  </header>
+
+  <div class="rk-picker" role="tablist" aria-label="Pilih mode">
+    <button class="rk-card is-active" role="tab" type="button" data-mode="names"
+            id="tab-names" aria-controls="mode-names" aria-selected="true">
+      <span class="rk-card-name">Acak Nama</span>
+      <span class="rk-card-desc">Masukkan daftar, lalu biarkan satu nama terpilih.</span>
+    </button>
+    <button class="rk-card" role="tab" type="button" data-mode="coin"
+            id="tab-coin" aria-controls="mode-coin" aria-selected="false" tabindex="-1">
+      <span class="rk-card-name">Coin Flip</span>
+      <span class="rk-card-desc">Keping atau ekors, peluang 50:50.</span>
+    </button>
+    <button class="rk-card" role="tab" type="button" data-mode="yesno"
+            id="tab-yesno" aria-controls="mode-yesno" aria-selected="false" tabindex="-1">
+      <span class="rk-card-name">Ya / Tidak</span>
+      <span class="rk-card-desc">Jawaban singkat untuk keputusan buntu.</span>
+    </button>
+  </div>
+
+  <!-- ══════════ 1. Acak Nama ══════════ -->
+  <section class="rk-mode" id="mode-names" role="tabpanel" aria-labelledby="tab-names" tabindex="0">
+
+    <div class="rk-reel-box">
+      <div class="rk-reel" id="reel">
+        <span class="rk-reel-label" id="reelLabel">siap?</span>
+      </div>
+      <div class="rk-flash" id="flash" aria-hidden="true"></div>
+    </div>
+
+    <div class="rk-result" id="resultBox">
+      <span class="rk-result-k">Hasil</span>
+      <output class="rk-result-v" id="winner">&mdash;</output>
+      <span class="rk-result-pct" id="winnerPct"></span>
+    </div>
+
+    <form class="rk-add" id="addForm">
+      <label class="cx-field rk-add-field">
+        <span class="cx-label">Tambah item</span>
+        <input type="text" id="itemInput" class="cx-input" autocomplete="off"
+               placeholder="Ketik nama lalu Enter" maxlength="60">
+      </label>
+      <label class="cx-field rk-add-field rk-add-field--w">
+        <span class="cx-label">Bobot</span>
+        <input type="number" id="itemWeight" class="cx-input" min="1" max="999" value="1" inputmode="numeric">
+      </label>
+      <button class="cx-btn cx-btn-primary" type="submit">Tambah</button>
+    </form>
+
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="spin" disabled>Acak</button>
+      <button class="cx-btn" id="removePicked" disabled>Hapus Hasil</button>
+      <button class="cx-btn" id="clearAll">Kosongkan</button>
+      <button class="cx-btn" id="loadSample">Contoh Daftar</button>
+      <label class="cx-inline">
+        <input type="checkbox" id="optNoRepeat">
+        <span>Tanpa pengembalian</span>
+      </label>
+    </div>
+
+    <div class="rk-list-head">
+      <h2 class="cx-card-title">Daftar <span id="itemCount" class="lf-badge">0</span></h2>
+      <span class="rk-list-note">Persen = bobot item dibagi total bobot</span>
+    </div>
+    <div id="itemList" class="rk-list">
+      <p class="lf-empty">Belum ada item. Tambahkan nama di atas.</p>
+    </div>
+  </section>
+
+  <!-- ══════════ 2. Coin Flip ══════════ -->
+  <section class="rk-mode" id="mode-coin" role="tabpanel" aria-labelledby="tab-coin" tabindex="0" hidden>
+
+    <div class="rk-coin-stage">
+      <div class="rk-coin" id="coin">
+        <span class="rk-coin-face rk-coin-head">K</span>
+        <span class="rk-coin-face rk-coin-tail">E</span>
+      </div>
+    </div>
+
+    <div class="rk-result">
+      <span class="rk-result-k">Hasil</span>
+      <output class="rk-result-v" id="coinResult">&mdash;</output>
+    </div>
+
+    <div class="cx-actions cx-actions--center">
+      <button class="cx-btn cx-btn-primary" id="flip">Lempar</button>
+    </div>
+
+    <div class="rk-tally" id="coinTally">
+      <div class="rk-tally-cell">
+        <span class="rk-tally-n" id="headCount">0</span>
+        <span class="rk-tally-l">Keping</span>
+      </div>
+      <div class="rk-tally-cell">
+        <span class="rk-tally-n" id="tailCount">0</span>
+        <span class="rk-tally-l">Ekors</span>
+      </div>
+      <div class="rk-tally-cell rk-tally-cell--bar">
+        <div class="rk-bar"><span id="coinBar" style="width:50%"></span></div>
+        <span class="rk-tally-l" id="coinPct">0 lemparan</span>
+      </div>
+    </div>
+    <div class="cx-actions">
+      <button class="rk-linkbtn" id="coinReset" type="button">Reset hitungan</button>
+    </div>
+  </section>
+
+  <!-- ══════════ 3. Ya / Tidak ══════════ -->
+  <section class="rk-mode" id="mode-yesno" role="tabpanel" aria-labelledby="tab-yesno" tabindex="0" hidden>
+
+    <div class="rk-yn-stage">
+      <div class="rk-yn-box" id="ynBox" data-v="">&mdash;</div>
+    </div>
+
+    <label class="cx-field rk-yn-field">
+      <span class="cx-label">Pertanyaan (opsional, hanya sebagai catatan)</span>
+      <input type="text" id="ynQuestion" class="cx-input" maxlength="90" autocomplete="off"
+             placeholder="mis. Should I shipping it now?">
+    </label>
+
+    <div class="cx-actions cx-actions--center">
+      <button class="cx-btn cx-btn-primary" id="ask">Tanya</button>
+    </div>
+
+    <div class="rk-tally" id="ynTally">
+      <div class="rk-tally-cell">
+        <span class="rk-tally-n" id="yesCount">0</span>
+        <span class="rk-tally-l">Ya</span>
+      </div>
+      <div class="rk-tally-cell">
+        <span class="rk-tally-n" id="noCount">0</span>
+        <span class="rk-tally-l">Tidak</span>
+      </div>
+      <div class="rk-tally-cell rk-tally-cell--bar">
+        <div class="rk-bar"><span id="ynBar" style="width:50%"></span></div>
+        <span class="rk-tally-l" id="ynPct">0 pertanyaan</span>
+      </div>
+    </div>
+    <div class="cx-actions">
+      <button class="rk-linkbtn" id="ynReset" type="button">Reset hitungan</button>
+    </div>
+  </section>
+
+</div>
+
+<script src="../assets/js/toast.js"></script>
+<script src="../assets/js/guard.js"></script>
+<script src="../assets/js/fmt.js"></script>
+<script src="../assets/js/settings.js"></script>
+<script src="../assets/js/net.js"></script>
+<script src="../assets/js/cmdpal.js"></script>
+<script src="../assets/js/particles.js"></script>
+<script src="../assets/js/drawer.js"></script>
+<script src="../assets/js/dropdown.js"></script>
+<script src="../assets/js/shortcuts.js"></script>
+<script src="../assets/js/sw-register.js"></script>
+<script src="../assets/js/random-page.js"></script>
+</body>
+</html>

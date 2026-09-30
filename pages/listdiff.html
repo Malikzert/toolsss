@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>List Diff &mdash; COFDE Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/listdiff.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
+</head>
+<body>
+<div class="cx-page">
+
+  <header class="cx-head">
+    <div>
+      <h1 class="cx-title">List Diff</h1>
+      <p class="cx-sub">Bandingkan dua daftar teks dan lihat persis apa yang berbeda.</p>
+    </div>
+    <span id="netBadge" class="cx-net"><span class="cx-net-dot"></span>Online</span>
+  </header>
+
+  <div class="lf-picker" role="tablist" aria-label="Pilih mode">
+    <button class="lf-card is-active" role="tab" type="button" data-mode="lines"
+            id="tab-lines" aria-controls="mode-lines" aria-selected="true">
+      <span class="lf-card-name">Beda Baris</span>
+      <span class="lf-card-desc">Baris mana yang hanya ada di salah satu daftar.</span>
+    </button>
+    <button class="lf-card" role="tab" type="button" data-mode="items"
+            id="tab-items" aria-controls="mode-items" aria-selected="false" tabindex="-1">
+      <span class="lf-card-name">Beda Data per Baris</span>
+      <span class="lf-card-desc">pecah tiap baris jadi kolom, lalu hitung sel yang beda.</span>
+    </button>
+  </div>
+
+  <!-- ── Mode 1: beda baris ── -->
+  <section class="lf-mode" id="mode-lines" role="tabpanel" aria-labelledby="tab-lines" tabindex="0">
+
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Daftar A</span>
+        <textarea id="aLines" class="cx-textarea" rows="12" spellcheck="false"
+          placeholder="Satu item per baris"></textarea>
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Daftar B</span>
+        <textarea id="bLines" class="cx-textarea" rows="12" spellcheck="false"
+          placeholder="Satu item per baris"></textarea>
+      </label>
+    </div>
+
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="runLines">Bandingkan</button>
+      <button class="cx-btn" id="swapLines">Tukar A &amp; B</button>
+      <button class="cx-btn" id="clearLines">Bersihkan</button>
+      <label class="cx-inline">
+        <input type="checkbox" id="optTrim" checked>
+        <span>Abaikan spasi berlebih</span>
+      </label>
+      <label class="cx-inline">
+        <input type="checkbox" id="optCase">
+        <span>Peka huruf besar</span>
+      </label>
+    </div>
+
+    <div id="linesStats" class="lf-stats"></div>
+    <div id="linesResult" class="lf-split">
+      <div class="lf-col">
+        <h2 class="cx-card-title">Hanya di A <span id="onlyACount" class="lf-badge"></span></h2>
+        <div id="onlyA" class="lf-list"></div>
+      </div>
+      <div class="lf-col">
+        <h2 class="cx-card-title">Hanya di B <span id="onlyBCount" class="lf-badge"></span></h2>
+        <div id="onlyB" class="lf-list"></div>
+      </div>
+      <div class="lf-col">
+        <h2 class="cx-card-title">Sama <span id="sameCount" class="lf-badge"></span></h2>
+        <div id="sameList" class="lf-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Mode 2: beda data per baris ── -->
+  <section class="lf-mode" id="mode-items" role="tabpanel" aria-labelledby="tab-items" tabindex="0" hidden>
+
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Daftar A</span>
+        <textarea id="aCells" class="cx-textarea" rows="12" spellcheck="false"
+          placeholder="id,nama,umur&#10;1,Budi,30"></textarea>
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Daftar B</span>
+        <textarea id="bCells" class="cx-textarea" rows="12" spellcheck="false"
+          placeholder="id,nama,umur&#10;1,Budi,31"></textarea>
+      </label>
+    </div>
+
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="runCells">Bandingkan Data</button>
+      <button class="cx-btn" id="swapCells">Tukar A &amp; B</button>
+      <button class="cx-btn" id="clearCells">Bersihkan</button>
+      <label class="cx-field cx-inline-field">
+        <span class="cx-label">Pemisah kolom</span>
+        <select id="cellSep" class="cx-select">
+          <option value="auto">Deteksi otomatis</option>
+          <option value=",">Koma ,</option>
+          <option value=";">Titik ;</option>
+          <option value="&#9;">Tab</option>
+          <option value="|">Pagar |</option>
+          <option value=" ">(spasi)</option>
+        </select>
+      </label>
+      <label class="cx-field cx-inline-field">
+        <span class="cx-label">Kolom kunci</span>
+        <input type="text" id="keyCol" class="cx-input" placeholder="mis. id" autocomplete="off">
+      </label>
+    </div>
+
+    <p class="cx-note" id="cellsHint">
+      Tanpa kolom kunci, baris dicocokkan berdasarkan nomor urut. Isi kolom kunci untuk
+      mencocokkan baris yang sama walau posisinya sudah beda. Kunci bisa berupa nomor
+      (mis. <code>1</code>) atau nama header (mis. <code>id</code>); kalau nama header,
+      baris pertama diperlakukan sebagai judul kolom.
+    </p>
+
+    <div id="cellsStats" class="lf-stats"></div>
+    <div id="cellsResult" class="lf-table-wrap">
+      <table class="cx-table">
+        <thead><tr><th>Baris</th><th>Kolom</th><th>Nilai A</th><th>Nilai B</th></tr></thead>
+        <tbody id="cellsTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<script src="../assets/js/toast.js"></script>
+<script src="../assets/js/guard.js"></script>
+<script src="../assets/js/fmt.js"></script>
+<script src="../assets/js/settings.js"></script>
+<script src="../assets/js/net.js"></script>
+<script src="../assets/js/cmdpal.js"></script>
+<script src="../assets/js/particles.js"></script>
+<script src="../assets/js/drawer.js"></script>
+<script src="../assets/js/dropdown.js"></script>
+<script src="../assets/js/shortcuts.js"></script>
+<script src="../assets/js/sw-register.js"></script>
+<script src="../assets/js/listdiff-page.js"></script>
+</body>
+</html>

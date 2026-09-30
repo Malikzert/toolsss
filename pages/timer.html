@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timer &mdash; COFDE Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/timer.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
+</head>
+<body>
+<div class="cx-page">
+
+  <header class="cx-head">
+    <div>
+      <h1 class="cx-title">Timer</h1>
+      <p class="cx-sub">Hitung mundur dan stopwatch dalam satu halaman.</p>
+    </div>
+    <span id="netBadge" class="cx-net"><span class="cx-net-dot"></span>Online</span>
+  </header>
+
+  <div class="tm-picker" role="tablist" aria-label="Pilih mode">
+    <button class="tm-card is-active" role="tab" type="button" data-mode="countdown"
+            id="tab-countdown" aria-controls="mode-countdown" aria-selected="true">
+      <span class="tm-card-name">Hitung Mundur</span>
+      <span class="tm-card-desc">Set durasi, lalu jalankan mundur sampai nol.</span>
+    </button>
+    <button class="tm-card" role="tab" type="button" data-mode="stopwatch"
+            id="tab-stopwatch" aria-controls="mode-stopwatch" aria-selected="false" tabindex="-1">
+      <span class="tm-card-name">Stopwatch</span>
+      <span class="tm-card-desc">Hitung waktu naik dengan presisi seperseratus detik.</span>
+    </button>
+  </div>
+
+  <!-- ── Countdown ── -->
+  <section class="tm-mode" id="mode-countdown" role="tabpanel" aria-labelledby="tab-countdown" tabindex="0">
+
+    <div class="tm-dial-wrap">
+      <svg class="tm-dial" viewBox="0 0 220 220" aria-hidden="true">
+        <circle class="tm-dial-track" cx="110" cy="110" r="98"></circle>
+        <circle class="tm-dial-arc" id="cdArc" cx="110" cy="110" r="98"></circle>
+      </svg>
+      <div class="tm-face">
+        <output class="tm-time" id="cdTime">00:00.00</output>
+        <span class="tm-face-note" id="cdNote">siap</span>
+      </div>
+    </div>
+
+    <div class="tm-presets" id="cdPresets">
+      <button class="tm-chip" type="button" data-min="1">1 mnt</button>
+      <button class="tm-chip" type="button" data-min="3">3 mnt</button>
+      <button class="tm-chip" type="button" data-min="5">5 mnt</button>
+      <button class="tm-chip" type="button" data-min="10">10 mnt</button>
+      <button class="tm-chip" type="button" data-min="15">15 mnt</button>
+      <button class="tm-chip" type="button" data-min="25">25 mnt</button>
+      <button class="tm-chip" type="button" data-min="30">30 mnt</button>
+      <button class="tm-chip" type="button" data-min="60">60 mnt</button>
+    </div>
+
+    <div class="cx-row">
+      <label class="cx-field">
+        <span class="cx-label">Menit</span>
+        <input type="number" id="cdMin" class="cx-input" min="0" max="999" value="5" inputmode="numeric">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Detik</span>
+        <input type="number" id="cdSec" class="cx-input" min="0" max="59" value="0" inputmode="numeric">
+      </label>
+      <label class="cx-field">
+        <span class="cx-label">Label (opsional)</span>
+        <input type="text" id="cdLabel" class="cx-input" placeholder="mis. Rebahan" maxlength="40" autocomplete="off">
+      </label>
+    </div>
+
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="cdStart">Mulai</button>
+      <button class="cx-btn" id="cdPause" disabled>Jeda</button>
+      <button class="cx-btn" id="cdReset">Reset</button>
+      <label class="cx-inline">
+        <input type="checkbox" id="cdBeep" checked>
+        <span>Bunyi saat selesai</span>
+      </label>
+      <label class="cx-inline">
+        <input type="checkbox" id="cdNotify">
+        <span>Notifikasi browser</span>
+      </label>
+    </div>
+
+    <div id="cdLaps" class="tm-laps"></div>
+  </section>
+
+  <!-- ── Stopwatch ── -->
+  <section class="tm-mode" id="mode-stopwatch" role="tabpanel" aria-labelledby="tab-stopwatch" tabindex="0" hidden>
+
+    <div class="tm-face tm-face--wide">
+      <output class="tm-time tm-time--wide" id="swTime">00:00.00</output>
+      <span class="tm-face-note" id="swNote">belum mulai</span>
+    </div>
+
+    <div class="cx-actions">
+      <button class="cx-btn cx-btn-primary" id="swStart">Mulai</button>
+      <button class="cx-btn" id="swLap" disabled>Catat Lap</button>
+      <button class="cx-btn" id="swReset">Reset</button>
+    </div>
+
+    <div class="tm-laps-head">
+      <h2 class="cx-card-title">Lap <span id="swLapCount" class="lf-badge">0</span></h2>
+      <button class="tm-linkbtn" id="swClearLaps" type="button" hidden>Bersihkan</button>
+    </div>
+    <div id="swLaps" class="tm-laps">
+      <p class="lf-empty">Belum ada lap.</p>
+    </div>
+  </section>
+
+</div>
+
+<script src="../assets/js/toast.js"></script>
+<script src="../assets/js/guard.js"></script>
+<script src="../assets/js/fmt.js"></script>
+<script src="../assets/js/settings.js"></script>
+<script src="../assets/js/net.js"></script>
+<script src="../assets/js/cmdpal.js"></script>
+<script src="../assets/js/particles.js"></script>
+<script src="../assets/js/drawer.js"></script>
+<script src="../assets/js/dropdown.js"></script>
+<script src="../assets/js/shortcuts.js"></script>
+<script src="../assets/js/sw-register.js"></script>
+<script src="../assets/js/timer-page.js"></script>
+</body>
+</html>
