@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+?<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -125,7 +125,7 @@
       }
     }
 
-    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ PDF â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ───────── PDF ───────── */
     async function processPDF(file) {
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -200,7 +200,7 @@
       document.getElementById('ssAllBtn')?.addEventListener('click', () => captureScreenshot('#pdfAllPages'));
     }
 
-    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ SS Bergulir â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ───────── SS Bergulir ───────── */
     async function captureScreenshot(selector) {
       const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
       if (!el) return;
@@ -245,7 +245,7 @@
       }
     }
 
-    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ DOCX â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ───────── DOCX ───────── */
     async function processDOCX(file) {
       const arrayBuffer = await file.arrayBuffer();
       const result = await mammoth.convertToHtml({ arrayBuffer });

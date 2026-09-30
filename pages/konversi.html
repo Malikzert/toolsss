@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+?<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -380,7 +380,7 @@
       }
     }
 
-    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ Ekstraksi â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ───────── Ekstraksi ───────── */
     async function extractText() {
       if (mode.from === 'DOCX') return fromDocx();
       return fromPdf();
@@ -482,7 +482,7 @@
       return optState.keepTables ? htmlToMd(r.value) : htmlToMd(r.value, true);
     }
 
-    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ DOCX &rarr; PDF â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ───────── DOCX &rarr; PDF ───────── */
     /* html2canvas (di dalam html2pdf) merender elemen tersembunyi sebagai 0 tinggi,
        jadi PDF jadi kosong. Sumber render WAJIB elemen yang terlihat di layout. */
     async function toPdf() {
@@ -524,7 +524,7 @@
       pdfSourceEl = sheet;
     }
 
-    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ PDF &rarr; DOCX â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ───────── PDF &rarr; DOCX ───────── */
     async function toDocx() {
       const pages = await fromPdf();
       const children = [];
@@ -582,7 +582,7 @@
       setTimeout(() => URL.revokeObjectURL(url), 4000);
     }
 
-    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ HTML &rarr; Markdown â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ───────── HTML &rarr; Markdown ───────── */
     function htmlToMd(html, dropTables) {
       const doc = new DOMParser().parseFromString(`<div id="r">${html}</div>`, 'text/html');
       const root = doc.getElementById('r');

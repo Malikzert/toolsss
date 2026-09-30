@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+?<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -292,7 +292,7 @@
 
     let images = [];
 
-    /* â”€â”€â”€â”€â”€ Upload â”€â”€â”€â”€â”€ */
+    /* ───── Upload ───── */
     function handleFiles(files) {
       let added = 0;
       for (const file of files) {
@@ -347,7 +347,7 @@
       }
     });
 
-    /* â”€â”€â”€â”€â”€ Add More â”€â”€â”€â”€â”€ */
+    /* ───── Add More ───── */
     addMoreBtn.addEventListener('click', () => addMoreBtn.querySelector('input').click());
     addMoreBtn.querySelector('input').addEventListener('change', () => {
       if (addMoreBtn.querySelector('input').files.length > 0) {
@@ -356,7 +356,7 @@
       }
     });
 
-    /* â”€â”€â”€â”€â”€ Render List â”€â”€â”€â”€â”€ */
+    /* ───── Render List ───── */
     function renderList() {
       if (images.length === 0) {
         imageList.innerHTML = `<div class="empty-state">&#128444;<p>Upload gambar untuk memulai</p></div>`;
@@ -407,7 +407,7 @@
       });
     }
 
-    /* â”€â”€â”€â”€â”€ Move / Remove â”€â”€â”€â”€â”€ */
+    /* ───── Move / Remove ───── */
     function moveImage(idx, dir) {
       const newIdx = idx + dir;
       if (newIdx < 0 || newIdx >= images.length) return;
@@ -420,7 +420,7 @@
       renderList();
     }
 
-    /* â”€â”€â”€â”€â”€ Page size helpers â”€â”€â”€â”€â”€ */
+    /* ───── Page size helpers ───── */
     function getPageDimensions() {
       const sizes = {
         a4: [210, 297],
@@ -433,7 +433,7 @@
       return { w, h };
     }
 
-    /* â”€â”€â”€â”€â”€ Convert to PDF â”€â”€â”€â”€â”€ */
+    /* ───── Convert to PDF ───── */
     convertBtn.addEventListener('click', async () => {
       if (images.length === 0) return;
 
