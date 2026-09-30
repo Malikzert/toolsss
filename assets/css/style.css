@@ -1410,3 +1410,75 @@ input, select, textarea, button, [type="checkbox"], [type="radio"], [type="range
   .cx-head, .cx-actions, #rangeTabs, .cx-btn, #fltQ, #fltType, #fltCategory, #fltSort { display: none !important; }
   .cx-card { break-inside: avoid; border: 1px solid #ccc; }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Responsive — versi HP (≤ 640px). Item menyesuaikan, tidak ada
+   yang terpotong, tetap proporsional.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  body {
+    padding: 0.75rem;
+    padding-top: 3.6rem !important;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .cx-page {
+    width: 100%;
+    padding: 0.9rem 0.4rem 3rem;
+    max-width: 100%;
+  }
+
+  .cx-head { gap: 0.6rem; margin-bottom: 1rem; }
+  .cx-title { font-size: 1.15rem; letter-spacing: 0.05em; }
+  .cx-sub { font-size: 0.78rem; }
+  .cx-net { font-size: 0.66rem; }
+
+  .cx-card { padding: 0.85rem; border-radius: 12px; margin-bottom: 0.8rem; }
+  .cx-card-title { font-size: 0.68rem; margin-bottom: 0.7rem; }
+  .cx-note { font-size: 0.78rem; }
+  .cx-note-inline { font-size: 0.75em; }
+
+  .cx-row { gap: 0.6rem; }
+  .cx-label { font-size: 0.68rem; }
+  .cx-input, .cx-select, .cx-textarea { font-size: 0.85rem; padding: 0.55rem 0.6rem; }
+
+  .cx-actions { gap: 0.55rem; row-gap: 0.55rem; margin-top: 0.75rem; }
+  .cx-actions .cx-btn {
+    flex: 1 1 100%;
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .cx-tabs { gap: 0.2rem; }
+  .cx-tab {
+    flex: 1 1 auto;
+    text-align: center;
+    padding: 0.5rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .cx-stats { gap: 0.55rem; }
+  .cx-stat { padding: 0.6rem 0.65rem; }
+  .cx-stat-value { font-size: 0.95rem; }
+
+  .cx-table-wrap { max-height: 22rem; border-radius: 8px; }
+  .cx-table { font-size: 0.74rem; white-space: normal; }
+  .cx-table th, .cx-table td { padding: 0.4rem 0.45rem; }
+
+  .cx-journal { padding: 0.6rem 0.7rem; }
+  .cx-journal-total { margin-left: 0; }
+  .cx-chart { height: 200px; }
+
+  #mapBox { height: 50vh !important; min-height: 260px; }
+  #mapSearch { font-size: 0.85rem; }
+
+  .cx-chip-list { gap: 0.3rem; }
+  .cx-chip-btn { font-size: 0.75rem; }
+
+  .toast { padding: 0.7rem 0.75rem; font-size: 0.8rem; }
+  #cofde-toasts { right: 0.6rem; bottom: 0.6rem; gap: 0.6rem; }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  .cx-actions .cx-btn { flex: 1 1 12rem; }
+}
