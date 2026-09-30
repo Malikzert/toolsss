@@ -1012,22 +1012,69 @@ h1 {
   color: var(--text-sec);
 }
 
-/* ── Cards ──────────────────────────────────────────────── */
+/* ── Cards ────────────────────────────────────────────────
+     Gaya khas valo: sudut siku (corner-notch), garis aksen di atas,
+     kilau saat hover — seragam dengan kartu di fitur lama. */
 .cx-card {
+  --clip-notch: 20px;
+  position: relative;
+  overflow: hidden;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 14px;
-  padding: 1.1rem;
+  border-radius: 0;
+  padding: 1.1rem 1.2rem;
   box-shadow: var(--card-shadow);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  clip-path: polygon(0 0, calc(100% - var(--clip-notch)) 0, 100% var(--clip-notch), 100% 100%, var(--clip-notch) 100%, 0 calc(100% - var(--clip-notch)));
   margin-bottom: 1rem;
+  transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+}
+
+/* Garis aksen melintas di tepi atas kartu. */
+.cx-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 18px;
+  right: 18px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 60%, transparent), transparent);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Kilau menyapu saat hover. */
+.cx-card::after {
+  content: '';
+  position: absolute;
+  top: -70%;
+  left: -80%;
+  width: 48%;
+  height: 240%;
+  background: linear-gradient(115deg, transparent 25%, rgba(255, 255, 255, 0.4) 50%, transparent 75%);
+  transform: rotate(18deg);
+  opacity: 0;
+  pointer-events: none;
+  transition: left 0.65s ease, opacity 0.2s ease;
+}
+
+.cx-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+}
+
+.cx-card:hover::after {
+  left: 130%;
+  opacity: 1;
 }
 
 .cx-card-title {
   margin: 0 0 0.85rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -1408,7 +1455,7 @@ input, select, textarea, button, [type="checkbox"], [type="radio"], [type="range
 
 @media print {
   .cx-head, .cx-actions, #rangeTabs, .cx-btn, #fltQ, #fltType, #fltCategory, #fltSort { display: none !important; }
-  .cx-card { break-inside: avoid; border: 1px solid #ccc; }
+  .cx-card { break-inside: avoid; border: 1px solid #ccc; clip-path: none; border-radius: 0; }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1433,7 +1480,7 @@ input, select, textarea, button, [type="checkbox"], [type="radio"], [type="range
   .cx-sub { font-size: 0.78rem; }
   .cx-net { font-size: 0.66rem; }
 
-  .cx-card { padding: 0.85rem; border-radius: 12px; margin-bottom: 0.8rem; }
+  .cx-card { --clip-notch: 12px; padding: 0.85rem; border-radius: 0; margin-bottom: 0.8rem; }
   .cx-card-title { font-size: 0.68rem; margin-bottom: 0.7rem; }
   .cx-note { font-size: 0.78rem; }
   .cx-note-inline { font-size: 0.75em; }

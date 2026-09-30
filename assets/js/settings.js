@@ -23,10 +23,11 @@
 
   function read() {
     var d = defaults();
+    var parsed = null;
     try {
       var raw = localStorage.getItem(KEY);
       if (raw) {
-        var parsed = JSON.parse(raw);
+        parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object') {
           Object.keys(d).forEach(function (k) {
             if (parsed[k] !== undefined && parsed[k] !== null) d[k] = parsed[k];
@@ -37,10 +38,14 @@
       /* localStorage diblokir atau JSON rusak: pakai default, jangan crash. */
     }
     /* Tema lama 'fire-theme' dipakai agar migrasi dari versi
-       sebelumnya tidak gelap/muda sendiri. */
+       sebelumnya tidak gelap/muda sendiri — TAPI hanya bila pengguna
+       belum menyimpan pilihan appearance secara eksplisit. Kalau sudah
+       memilih Light/Dark/System, pilihan itu tidak boleh ditimpa sisa
+       tema lama. */
     try {
       var t = localStorage.getItem('fire-theme');
-      if (t && !current && ['lightholy', 'darkside', 'abyss'].indexOf(t) >= 0) d.appearance = t;
+      var explicit = !!(parsed && parsed.appearance !== undefined && parsed.appearance !== null && parsed.appearance !== '');
+      if (t && !current && !explicit && ['lightholy', 'darkside', 'abyss'].indexOf(t) >= 0) d.appearance = t;
     } catch (e2) { /* abaikan */ }
     return d;
   }
@@ -91,28 +96,29 @@
   }
 
   /* 'system' berarti ikuti OS; kalau tidak, pakai tema eksplisit.
-     Prioritas pilihan tema (yang terakhir diinginkan pengguna menang):
-       1. radio Light/Dark yang dipilih eksplisit di Settings
-       2. chip tema di drawer (localStorage 'fire-theme') — termasuk
-          pilihan dari halaman lama yang tidak memakai settings.js
-       3. migration/konkret historis
-       4. 'system' -> ikuti OS
-     Ini mencegah pilihan chip ditimpa tebakan 'system' ketika membuka
-     Expense Tracker (halaman yang memanggil settings.init()). */
+     Prioritas (yang tersimpan eksplisit menang; chip hanya dipakai
+     saat 'system' yang artinya "tidak ada paksaan"):
+       1. appearance tersimpan eksplisit: 'light'/'dark' atau nama
+          tema konkret (lightholy/darkside/abyss)
+       2. kalau appearance 'system': chip tema di drawer terakhir
+          (localStorage 'fire-theme'), termasuk pilihan dari halaman
+          lama yang tidak memakai settings.js
+       3. 'system' tanpa chip -> ikuti OS
+     Ini mencegah pilihan Light/Dark ditimpa sisa tema lama. */
   function resolvedTheme() {
     var s = get();
     if (s.appearance === 'dark') return 'darkside';
     if (s.appearance === 'light') return 'lightholy';
+    if (['lightholy', 'darkside', 'abyss'].indexOf(s.appearance) >= 0) return s.appearance;
     var fresh = null;
     try { fresh = localStorage.getItem('fire-theme'); } catch (e) { fresh = null; }
     if (fresh && ['lightholy', 'darkside', 'abyss'].indexOf(fresh) >= 0) return fresh;
-    if (['lightholy', 'darkside', 'abyss'].indexOf(s.appearance) >= 0) return s.appearance;
     return prefersDark() ? 'abyss' : 'lightholy';
   }
 
   function applyAppearance() {
     var theme = resolvedTheme();
-    var forced = ['light', 'dark'].indexOf(get().appearance) >= 0;
+    var forced = get().appearance !== 'system';
     document.documentElement.setAttribute('data-theme', theme);
     if (window.COFDE_THEME && typeof COFDE_THEME.set === 'function') {
       try {
