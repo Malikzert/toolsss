@@ -7,9 +7,11 @@
 
   var PAGES = [
     { href: 'dashboard.html', label: 'Dashboard' },
-    { href: 'index.html',     label: 'Dokumen Reader' },
+    { href: 'reader.html',    label: 'Dokumen Reader' },
     { href: 'crop.html',      label: 'Potong Gambar' },
     { href: 'gabung.html',    label: 'Gabung ke PDF' },
+    { href: 'merge.html',     label: 'Merge PDF' },
+    { href: 'split.html',     label: 'Split PDF' },
     { href: 'konversi.html',  label: 'Konversi' }
   ];
 
@@ -25,7 +27,7 @@
   };
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var current = location.pathname.split('/').pop() || 'index.html';
+  var current = location.pathname.split('/').pop() || 'dashboard.html';
   var isOpen = false;
   var isBusy = false;
 

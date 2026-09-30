@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Potong Gambar Panjang</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -328,7 +328,7 @@
     /* global drag state */
     const dragState = { active: false, lineEl: null, startY: 0, cutIdx: -1, origCutY: 0, imgH: 0, scale: 1 };
 
-    /* ───── Upload ───── */
+    /* â”€â”€â”€â”€â”€ Upload â”€â”€â”€â”€â”€ */
     uploadArea.addEventListener('click', () => fileInput.click());
     uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = '#6366f1'; });
     uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = '#cbd5e1'; });
@@ -340,7 +340,7 @@
     });
     fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadImage(fileInput.files[0]); });
 
-    /* ───── Mode toggle ───── */
+    /* â”€â”€â”€â”€â”€ Mode toggle â”€â”€â”€â”€â”€ */
     document.getElementById('modeToggle').querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('#modeToggle button').forEach(b => b.classList.remove('active'));
@@ -354,7 +354,7 @@
       });
     });
 
-    /* ───── Generate cut points from mode ───── */
+    /* â”€â”€â”€â”€â”€ Generate cut points from mode â”€â”€â”€â”€â”€ */
     function generateCutPointsFromMode() {
       if (!originalImage) return;
       const imgH = originalImage.naturalHeight;
@@ -378,7 +378,7 @@
       updatePreview();
     }
 
-    /* ───── Load image ───── */
+    /* â”€â”€â”€â”€â”€ Load image â”€â”€â”€â”€â”€ */
     function loadImage(file) {
       uploadArea.classList.add('has-file');
       document.querySelector('.upload-area p').innerHTML = `<strong>${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)`;
@@ -400,7 +400,7 @@
       reader.readAsDataURL(file);
     }
 
-    /* ───── Compute parts from cutPoints ───── */
+    /* â”€â”€â”€â”€â”€ Compute parts from cutPoints â”€â”€â”€â”€â”€ */
     function getParts() {
       if (!originalImage) return [];
       const imgH = originalImage.naturalHeight;
@@ -422,7 +422,7 @@
       return parts.filter(p => p.h > 0);
     }
 
-    /* ───── Update preview ───── */
+    /* â”€â”€â”€â”€â”€ Update preview â”€â”€â”€â”€â”€ */
     function updatePreview() {
       if (!originalImage) return;
       const imgW = originalImage.naturalWidth;
@@ -476,13 +476,13 @@
 
         const handle = document.createElement('div');
         handle.className = 'handle';
-        handle.textContent = '⋮⋮';
+        handle.textContent = 'â‹®â‹®';
         line.appendChild(handle);
 
         if (mode === 'custom') {
           const rmBtn = document.createElement('button');
           rmBtn.className = 'remove-btn';
-          rmBtn.textContent = '×';
+          rmBtn.textContent = 'Ã—';
           rmBtn.title = 'Hapus garis';
           rmBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -527,13 +527,13 @@
       list.style.cssText = 'margin-top:0.75rem;font-size:0.8rem;color:#64748b;display:flex;flex-wrap:wrap;gap:0.25rem 1rem;';
       parts.forEach((p, i) => {
         const pos = document.createElement('span');
-        pos.textContent = `#${i + 1}: y=${p.y}–${p.y + p.h}px (${p.h}px)`;
+        pos.textContent = `#${i + 1}: y=${p.y}â€“${p.y + p.h}px (${p.h}px)`;
         list.appendChild(pos);
       });
       previewContainer.appendChild(list);
     }
 
-    /* ───── Apply / Crop ───── */
+    /* â”€â”€â”€â”€â”€ Apply / Crop â”€â”€â”€â”€â”€ */
     applyBtn.addEventListener('click', () => {
       if (!originalImage) return;
       applyBtn.textContent = 'Memotong...';
@@ -582,7 +582,7 @@
       }, 100);
     });
 
-    /* ───── Download All ZIP ───── */
+    /* â”€â”€â”€â”€â”€ Download All ZIP â”€â”€â”€â”€â”€ */
     downloadAllBtn.addEventListener('click', async () => {
       downloadAllBtn.disabled = true;
       downloadAllBtn.textContent = 'Membuat ZIP...';
@@ -605,13 +605,13 @@
       downloadAllBtn.textContent = 'Download Semua (ZIP)';
     });
 
-    /* ───── Reset ───── */
+    /* â”€â”€â”€â”€â”€ Reset â”€â”€â”€â”€â”€ */
     resetLinesBtn.addEventListener('click', () => {
       cutPoints = [];
       updatePreview();
     });
 
-    /* ───── Global drag handlers ───── */
+    /* â”€â”€â”€â”€â”€ Global drag handlers â”€â”€â”€â”€â”€ */
     document.addEventListener('mousemove', (ev) => {
       if (!dragState.active || dragState.cutIdx < 0) return;
       const delta = (ev.clientY - dragState.startY);
@@ -650,13 +650,14 @@
       dragState.cutIdx = -1;
     });
 
-    /* ───── Input events ───── */
+    /* â”€â”€â”€â”€â”€ Input events â”€â”€â”€â”€â”€ */
     partsCount.addEventListener('input', () => { if (originalImage && mode === 'parts') generateCutPointsFromMode(); });
     partHeight.addEventListener('input', () => { if (originalImage && mode === 'height') generateCutPointsFromMode(); });
     overlap.addEventListener('input', () => { if (originalImage) updatePreview(); });
     keepOriginalSize.addEventListener('change', () => { if (originalImage) updatePreview(); });
   </script>
-  <script src="particles.js"></script>
-  <script src="drawer.js"></script>
+  <script src="../assets/js/particles.js"></script>
+  <script src="../assets/js/drawer.js"></script>
+  <script src="../assets/js/sw-register.js"></script>
 </body>
 </html>

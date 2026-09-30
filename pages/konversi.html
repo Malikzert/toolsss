@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Konversi Dokumen</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -380,7 +380,7 @@
       }
     }
 
-    /* ───────── Ekstraksi ───────── */
+    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ Ekstraksi â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     async function extractText() {
       if (mode.from === 'DOCX') return fromDocx();
       return fromPdf();
@@ -482,7 +482,7 @@
       return optState.keepTables ? htmlToMd(r.value) : htmlToMd(r.value, true);
     }
 
-    /* ───────── DOCX &rarr; PDF ───────── */
+    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ DOCX &rarr; PDF â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     /* html2canvas (di dalam html2pdf) merender elemen tersembunyi sebagai 0 tinggi,
        jadi PDF jadi kosong. Sumber render WAJIB elemen yang terlihat di layout. */
     async function toPdf() {
@@ -524,7 +524,7 @@
       pdfSourceEl = sheet;
     }
 
-    /* ───────── PDF &rarr; DOCX ───────── */
+    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ PDF &rarr; DOCX â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     async function toDocx() {
       const pages = await fromPdf();
       const children = [];
@@ -582,7 +582,7 @@
       setTimeout(() => URL.revokeObjectURL(url), 4000);
     }
 
-    /* ───────── HTML &rarr; Markdown ───────── */
+    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€ HTML &rarr; Markdown â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     function htmlToMd(html, dropTables) {
       const doc = new DOMParser().parseFromString(`<div id="r">${html}</div>`, 'text/html');
       const root = doc.getElementById('r');
@@ -654,7 +654,8 @@
       return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
   </script>
-  <script src="particles.js"></script>
-  <script src="drawer.js"></script>
+  <script src="../assets/js/particles.js"></script>
+  <script src="../assets/js/drawer.js"></script>
+  <script src="../assets/js/sw-register.js"></script>
 </body>
 </html>

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gabung Gambar ke PDF</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -292,7 +292,7 @@
 
     let images = [];
 
-    /* ───── Upload ───── */
+    /* â”€â”€â”€â”€â”€ Upload â”€â”€â”€â”€â”€ */
     function handleFiles(files) {
       let added = 0;
       for (const file of files) {
@@ -347,7 +347,7 @@
       }
     });
 
-    /* ───── Add More ───── */
+    /* â”€â”€â”€â”€â”€ Add More â”€â”€â”€â”€â”€ */
     addMoreBtn.addEventListener('click', () => addMoreBtn.querySelector('input').click());
     addMoreBtn.querySelector('input').addEventListener('change', () => {
       if (addMoreBtn.querySelector('input').files.length > 0) {
@@ -356,7 +356,7 @@
       }
     });
 
-    /* ───── Render List ───── */
+    /* â”€â”€â”€â”€â”€ Render List â”€â”€â”€â”€â”€ */
     function renderList() {
       if (images.length === 0) {
         imageList.innerHTML = `<div class="empty-state">&#128444;<p>Upload gambar untuk memulai</p></div>`;
@@ -407,7 +407,7 @@
       });
     }
 
-    /* ───── Move / Remove ───── */
+    /* â”€â”€â”€â”€â”€ Move / Remove â”€â”€â”€â”€â”€ */
     function moveImage(idx, dir) {
       const newIdx = idx + dir;
       if (newIdx < 0 || newIdx >= images.length) return;
@@ -420,7 +420,7 @@
       renderList();
     }
 
-    /* ───── Page size helpers ───── */
+    /* â”€â”€â”€â”€â”€ Page size helpers â”€â”€â”€â”€â”€ */
     function getPageDimensions() {
       const sizes = {
         a4: [210, 297],
@@ -433,7 +433,7 @@
       return { w, h };
     }
 
-    /* ───── Convert to PDF ───── */
+    /* â”€â”€â”€â”€â”€ Convert to PDF â”€â”€â”€â”€â”€ */
     convertBtn.addEventListener('click', async () => {
       if (images.length === 0) return;
 
@@ -516,7 +516,8 @@
       }
     });
   </script>
-  <script src="particles.js"></script>
-  <script src="drawer.js"></script>
+  <script src="../assets/js/particles.js"></script>
+  <script src="../assets/js/drawer.js"></script>
+  <script src="../assets/js/sw-register.js"></script>
 </body>
 </html>

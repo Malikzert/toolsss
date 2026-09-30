@@ -3,269 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dokumen Reader</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <title>COFDE Toolkit</title>
+  <meta name="description" content="Toolkit dokumen statis yang berjalan sepenuhnya di browser. Reader, potong gambar, gabung PDF, dan konversi tanpa upload.">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="manifest" href="pwa/manifest.webmanifest">
+  <link rel="icon" href="pwa/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="pwa/icons/icon-192.png">
+  <meta http-equiv="refresh" content="0; url=pages/dashboard.html">
+  <link rel="canonical" href="pages/dashboard.html">
+  <script>location.replace('pages/dashboard.html' + location.search + location.hash);</script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
+    html, body { margin: 0; background: #0b0b12; }
+    .boot {
+      display: grid;
+      place-items: center;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
+      color: #ff4655;
+      font: 700 0.78rem/1 system-ui, sans-serif;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
     }
-    h1 { font-size: 1.75rem; color: #1a1a2e; margin-bottom: 1.5rem; }
-    .upload-area {
-      background: white;
-      border: 2px dashed #cbd5e1;
-      border-radius: 1rem;
-      padding: 3rem 2rem;
-      text-align: center;
-      cursor: pointer;
-      transition: 0.2s;
-      width: 100%;
-      max-width: 480px;
-    }
-    .upload-area:hover { border-color: #6366f1; background: #f8f8ff; }
-    .upload-area.has-file { border-color: #22c55e; background: #f0fdf4; }
-    .upload-area p { color: #64748b; margin-top: 0.5rem; }
-    .upload-area small { color: #94a3b8; font-size: 0.8rem; }
-    .upload-area input { display: none; }
-    .upload-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
-    #content { margin-top: 1.5rem; width: 100%; max-width: 900px; }
-    .card {
-      background: white;
-      border-radius: 0.75rem;
-      padding: 1.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .card .text {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      font-size: 0.95rem;
-      line-height: 1.7;
-      color: #1e293b;
-      max-height: 70vh;
-      overflow-y: auto;
-    }
-    .loading { text-align: center; color: #6366f1; padding: 2rem; }
-    .error { color: #ef4444; padding: 1rem; background: #fef2f2; border-radius: 0.5rem; }
-    .meta { font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; }
-    .page-nav {
-      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;
-    }
-    .page-nav button {
-      background: #6366f1; color: white; border: none; padding: 0.4rem 1rem;
-      border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem;
-    }
-    .page-nav button:disabled { background: #cbd5e1; cursor: not-allowed; }
-    .page-nav span { font-size: 0.9rem; color: #475569; }
-    .filename { font-weight: 600; color: #1e293b; margin-bottom: 0.5rem; }
-    .pdf-page { width: 100%; margin-bottom: 1rem; }
-    .pdf-page canvas { width: 100% !important; height: auto !important; }
-    .docx-content h1, .docx-content h2, .docx-content h3 { margin-top: 1rem; margin-bottom: 0.5rem; }
-    .docx-content p { margin-bottom: 0.5rem; }
-    .docx-content table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-    .docx-content td, .docx-content th { border: 1px solid #cbd5e1; padding: 0.5rem; text-align: left; }
-    .docx-content img { max-width: 100%; height: auto; }
   </style>
 </head>
-
 <body>
-  <h1 style="font-size:1.75rem;margin-bottom:1.5rem;">Dokumen Reader</h1>
-
-  <div class="upload-area" id="uploadArea">
-    <div class="upload-icon">&#128196;</div>
-    <p><strong>Klik untuk upload</strong><br>atau drag & drop file ke sini</p>
-    <small>Format: PDF &bull; DOCX</small>
-    <input type="file" id="fileInput" accept=".pdf,.docx">
-  </div>
-
-  <div id="content"></div>
-
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    const uploadArea = document.getElementById('uploadArea');
-    const fileInput = document.getElementById('fileInput');
-    const content = document.getElementById('content');
-
-    uploadArea.addEventListener('click', () => fileInput.click());
-
-    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = '#6366f1'; });
-    uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = '#cbd5e1'; });
-    uploadArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      uploadArea.style.borderColor = '#cbd5e1';
-      const f = e.dataTransfer.files[0];
-      if (f && (f.name.endsWith('.pdf') || f.name.endsWith('.docx'))) processFile(f);
-      else alert('Hanya file PDF atau DOCX yang didukung.');
-    });
-
-    fileInput.addEventListener('change', () => { if (fileInput.files.length > 0) processFile(fileInput.files[0]); });
-
-    async function processFile(file) {
-      uploadArea.classList.add('has-file');
-      document.querySelector('.upload-area p').innerHTML =
-        `<strong>${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)`;
-      content.innerHTML = '<div class="loading card">Memproses dokumen...</div>';
-
-      try {
-        if (file.name.endsWith('.pdf')) {
-          await processPDF(file);
-        } else if (file.name.endsWith('.docx')) {
-          await processDOCX(file);
-        }
-      } catch (err) {
-        content.innerHTML = `<div class="error card">Gagal membaca: ${err.message}</div>`;
-      }
-    }
-
-    /* ───────── PDF ───────── */
-    async function processPDF(file) {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      const totalPages = pdf.numPages;
-      let currentPage = 1;
-
-      function renderView(pageNum) {
-        content.innerHTML = `
-          <div class="card">
-            <div class="filename">${file.name}</div>
-            <div class="page-nav">
-              <button id="prevBtn" ${pageNum <= 1 ? 'disabled' : ''}>Sebelumnya</button>
-              <span>Halaman ${pageNum} dari ${totalPages}</span>
-              <button id="nextBtn" ${pageNum >= totalPages ? 'disabled' : ''}>Selanjutnya</button>
-              <button id="allBtn" style="margin-left:auto;background:#64748b;">Tampilkan Semua</button>
-              <button id="ssBtn" style="background:#22c55e;">SS Bergulir</button>
-            </div>
-            <div id="pdfContainer" class="pdf-page"><p style="color:#94a3b8;">Merender...</p></div>
-          </div>
-        `;
-
-        renderPageToCanvas(pdf, pageNum, 'pdfContainer');
-
-        document.getElementById('prevBtn')?.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderView(currentPage); } });
-        document.getElementById('nextBtn')?.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; renderView(currentPage); } });
-        document.getElementById('allBtn')?.addEventListener('click', () => renderAllPDF(pdf, file.name, totalPages));
-        document.getElementById('ssBtn')?.addEventListener('click', () => captureScreenshot('pdfContainer'));
-      }
-
-      renderView(1);
-    }
-
-    async function renderPageToCanvas(pdf, pageNum, containerId) {
-      const page = await pdf.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 1.5 });
-      const canvas = document.createElement('canvas');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      const ctx = canvas.getContext('2d');
-
-      await page.render({ canvasContext: ctx, viewport }).promise;
-
-      const container = document.getElementById(containerId);
-      if (container) {
-        container.innerHTML = '';
-        container.appendChild(canvas);
-      }
-    }
-
-    async function renderAllPDF(pdf, filename, totalPages) {
-      content.innerHTML = '<div class="loading card">Merender semua halaman...</div>';
-      let html = `<div class="card"><div class="filename">${filename}</div>`;
-      html += '<div style="margin-bottom:0.75rem;display:flex;gap:0.5rem;"><button id="backSingleBtn" class="ss-hide" style="background:#64748b;color:white;border:none;padding:0.4rem 1rem;border-radius:0.5rem;cursor:pointer;">&larr; Per Halaman</button><button id="ssAllBtn" class="ss-hide" style="background:#22c55e;color:white;border:none;padding:0.4rem 1rem;border-radius:0.5rem;cursor:pointer;">SS Bergulir</button></div>';
-      html += '<div id="pdfAllPages">';
-
-      for (let i = 1; i <= totalPages; i++) {
-        const page = await pdf.getPage(i);
-        const viewport = page.getViewport({ scale: 1.5 });
-        const canvas = document.createElement('canvas');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        canvas.style.cssText = 'width:100%;height:auto;margin-bottom:0.5rem;';
-        const ctx = canvas.getContext('2d');
-        await page.render({ canvasContext: ctx, viewport }).promise;
-        const dataUrl = canvas.toDataURL();
-        html += `<div style="margin-bottom:1.5rem;"><p style="font-weight:600;margin-bottom:0.25rem;color:#475569;">Halaman ${i}</p><img src="${dataUrl}" style="width:100%;height:auto;border:1px solid #e2e8f0;border-radius:0.25rem;"></div>`;
-      }
-
-      html += `</div><div class="meta">${totalPages} halaman</div></div>`;
-      content.innerHTML = html;
-      document.getElementById('backSingleBtn')?.addEventListener('click', () => processPDF({ name: filename, arrayBuffer: async () => null }));
-      document.getElementById('ssAllBtn')?.addEventListener('click', () => captureScreenshot('#pdfAllPages'));
-    }
-
-    /* ───────── SS Bergulir ───────── */
-    async function captureScreenshot(selector) {
-      const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
-      if (!el) return;
-
-      const restore = [];
-
-      function disableOverflow(node) {
-        if (!node || !node.style) return;
-        const cs = getComputedStyle(node);
-        const ov = cs.overflowY || cs.overflow;
-        const mh = cs.maxHeight;
-        if (mh && mh !== 'none' && (ov === 'auto' || ov === 'scroll')) {
-          restore.push(() => { node.style.overflowY = ''; node.style.maxHeight = ''; });
-          node.style.overflowY = 'visible';
-          node.style.maxHeight = 'none';
-        }
-        for (const child of node.children) disableOverflow(child);
-      }
-
-      disableOverflow(el);
-
-      const hideEls = document.querySelectorAll('.ss-hide');
-      const hidden = [];
-      hideEls.forEach(n => { hidden.push(() => n.style.removeProperty('display')); n.style.display = 'none'; });
-
-      try {
-        const canvas = await html2canvas(el, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          scrollY: 0,
-          windowHeight: el.scrollHeight,
-          height: el.scrollHeight,
-        });
-        const link = document.createElement('a');
-        link.download = `screenshot-${Date.now()}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-      } finally {
-        restore.forEach(fn => fn());
-        hidden.forEach(fn => fn());
-      }
-    }
-
-    /* ───────── DOCX ───────── */
-    async function processDOCX(file) {
-      const arrayBuffer = await file.arrayBuffer();
-      const result = await mammoth.convertToHtml({ arrayBuffer });
-
-      content.innerHTML = `
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
-            <div class="filename">${file.name}</div>
-            <button id="ssDocxBtn" class="ss-hide" style="background:#22c55e;color:white;border:none;padding:0.4rem 1rem;border-radius:0.5rem;cursor:pointer;font-size:0.85rem;">SS Bergulir</button>
-          </div>
-          <div class="docx-content text">${result.value}</div>
-          ${result.messages.filter(m => m.type === 'warning').length > 0
-            ? `<div class="meta" style="margin-top:0.75rem;">Catatan: ${result.messages.filter(m => m.type === 'warning').length} peringatan (format kompleks mungkin tidak sempurna)</div>`
-            : ''}
-        </div>
-      `;
-      document.getElementById('ssDocxBtn')?.addEventListener('click', () => captureScreenshot('.docx-content'));
-    }
-  </script>
-  <script src="particles.js"></script>
-  <script src="drawer.js"></script>
+  <div class="boot">COFDE Toolkit</div>
+  <script src="assets/js/sw-register.js"></script>
 </body>
 </html>

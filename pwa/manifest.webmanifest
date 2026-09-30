@@ -1,0 +1,53 @@
+{
+  "name": "COFDE Toolkit",
+  "short_name": "COFDE",
+  "description": "Toolkit dokumen statis yang berjalan sepenuhnya di browser. Reader, potong gambar, gabung PDF, dan konversi tanpa upload.",
+  "start_url": "../index.html",
+  "scope": "../",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0b12",
+  "theme_color": "#ff4655",
+  "lang": "id",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "../pages/dashboard.html"
+    },
+    {
+      "name": "Dokumen Reader",
+      "url": "../pages/reader.html"
+    },
+    {
+      "name": "Konversi",
+      "url": "../pages/konversi.html"
+    }
+  ]
+}
