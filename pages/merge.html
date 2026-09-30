@@ -8,6 +8,7 @@
   <link rel="manifest" href="../pwa/manifest.webmanifest">
   <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
   <meta name="theme-color" content="#ff4655">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
@@ -382,20 +383,69 @@
           }
         }
 
-        if (addBookmark.checked) {
-          let page = 0;
-          for (const d of docs) {
-            out.setTitle(d.name);
-            page += d.pageCount;
-          }
+        /* pdf-lib 1.17.1 tidak menyediakan API outline, jadi bookmark
+           ditulis langsung ke dictionary Outlines pada document catalog. */
+        if (addBookmark.checked && docs.length) {
+          try {
+            const ctx = out.context;
+            const catalog = out.catalog.dict;
+            const outlinesRef = ctx.nextRef();
+            const pageRefs = out.getPages().map(function (p) { return p.ref; });
+
+            /* Tahap 1: alokasikan reference untuk tiap item, lalu isi
+               dictionary-nya (Prev/Next harus menunjuk ref yang sudah ada). */
+            const refs = docs.map(function () { return ctx.nextRef(); });
+            let page = 0;
+            docs.forEach(function (d, i) {
+              const item = ctx.obj({
+                Title: PDFLib.PDFHexString.fromText(d.name),
+                Parent: outlinesRef,
+                Dest: [pageRefs[page], { Type: 'Fit' }]
+              });
+              if (i > 0) item.set(PDFLib.PDFName.of('Prev'), refs[i - 1]);
+              if (i < docs.length - 1) item.set(PDFLib.PDFName.of('Next'), refs[i + 1]);
+              ctx.assign(refs[i], item);
+              page += d.pageCount;
+            });
+
+            ctx.assign(outlinesRef, ctx.obj({
+              Type: 'Outlines',
+              First: refs[0],
+              Last: refs[refs.length - 1],
+              Count: docs.length
+            }));
+            catalog.set(PDFLib.PDFName.of('Outlines'), outlinesRef);
+          } catch (e) { /* outline is best-effort; merge still succeeds without it */ }
         }
 
         if (keepMeta.checked && docs.length) {
           try {
-            out.setProducer('COFDE Toolkit');
-            out.setCreator('COFDE Toolkit');
-            const t = out.getTitle();
-            if (t) out.setSubject('Gabungan dari ' + docs.length + ' file');
+            const src = docs[0].pdf;
+            const title = src.getTitle();
+            const author = src.getAuthor();
+            const subject = src.getSubject();
+            const creator = src.getCreator();
+            const created = src.getCreationDate();
+            const modified = src.getModificationDate();
+
+            if (title) out.setTitle(title);
+            if (author) out.setAuthor(author);
+            if (subject) out.setSubject(subject);
+            if (creator) out.setCreator(creator);
+            if (created) out.setCreationDate(created);
+            if (modified) out.setModificationDate(modified);
+
+            /* getKeywords() selalu mengembalikan string "a b c" pada versi ini,
+               sedangkan setKeywords() menuntut array. */
+            const kw = src.getKeywords();
+            if (kw) {
+              const arr = String(kw).split(/\s+/).filter(Boolean);
+              if (arr.length) out.setKeywords(arr);
+            }
+
+            /* save() menimpa Producer dengan identitas pdf-lib, jadi metadata
+               Producer asli tidak bisa dipertahankan lewat API ini. */
+            if (!out.getProducer()) out.setProducer('COFDE Toolkit');
           } catch (e) { /* metadata ops are best-effort */ }
         }
 
@@ -483,6 +533,7 @@
   </script>
   <script src="../assets/js/particles.js"></script>
   <script src="../assets/js/drawer.js"></script>
+  <script src="../assets/js/shortcuts.js"></script>
   <script src="../assets/js/sw-register.js"></script>
 </body>
 </html>
