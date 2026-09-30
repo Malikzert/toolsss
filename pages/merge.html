@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merge PDF</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    h1 { font-size: 1.75rem; margin-bottom: 0.35rem; }
+    .sub { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; text-align: center; max-width: 52ch; }
+
+    .upload-area {
+      background: var(--card-bg);
+      border: 2px dashed var(--border);
+      border-radius: 1rem;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+      width: 100%;
+      max-width: 600px;
+      backdrop-filter: blur(20px) saturate(150%);
+      -webkit-backdrop-filter: blur(20px) saturate(150%);
+    }
+    .upload-area:hover { border-color: var(--accent); }
+    .upload-area.has-file { border-color: var(--accent); padding: 1.5rem; }
+    .upload-area p { color: var(--text-muted); margin-top: 0.5rem; }
+    .upload-area input { display: none; }
+    .upload-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+    .layout { display: flex; gap: 1.5rem; width: 100%; max-width: 1200px; margin-top: 1.5rem; align-items: flex-start; }
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px) saturate(150%);
+      -webkit-backdrop-filter: blur(20px) saturate(150%);
+      border: 1px solid var(--card-border);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      box-shadow: var(--card-shadow);
+      position: sticky;
+      top: 1rem;
+    }
+    .sidebar h3 { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.14em; }
+    .sidebar label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.3rem; font-weight: 600; }
+    .sidebar select, .sidebar input {
+      width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border);
+      border-radius: 0.5rem; font-size: 0.9rem; margin-bottom: 1rem;
+      background: var(--card-bg); color: var(--text); outline: none;
+    }
+    .sidebar select:focus, .sidebar input:focus { border-color: var(--accent); }
+    .sidebar button {
+      width: 100%; padding: 0.6rem; border: none; border-radius: 0.5rem; cursor: pointer;
+      font-size: 0.9rem; font-weight: 600; transition: 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: var(--on-accent, #fff); }
+    .btn-primary:hover { filter: brightness(1.12); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
+    .btn-success { background: #22c55e; color: white; margin-top: 0.5rem; }
+    .btn-success:hover { background: #16a34a; }
+    .btn-success:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+
+    .main-area { flex: 1; min-width: 0; }
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: 3rem; }
+    .empty-state p { font-size: 1rem; margin-top: 0.5rem; }
+
+    .file-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .file-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      border: 1px solid var(--card-border);
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .file-card .idx {
+      width: 2rem; height: 2rem; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--accent); color: var(--on-accent, #fff);
+      font-weight: 700; font-size: 0.8rem; border-radius: 0.35rem;
+    }
+    .file-card .info { flex: 1; min-width: 0; }
+    .file-card .info .name { font-weight: 600; color: var(--text); font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-card .info .detail { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem; }
+    .file-card .actions { display: flex; gap: 0.35rem; flex-shrink: 0; }
+    .file-card .actions button {
+      width: 2rem; height: 2rem; border: none; border-radius: 0.35rem; cursor: pointer;
+      font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: 0.15s;
+    }
+    .btn-move { background: var(--vx-chip, #f1f5f9); color: var(--text-muted); }
+    .btn-move:hover { background: var(--border); }
+    .btn-move:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-remove { background: #fef2f2; color: #ef4444; }
+    .btn-remove:hover { background: #fee2e2; }
+
+    .add-more {
+      background: var(--card-bg);
+      border: 2px dashed var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .add-more:hover { border-color: var(--accent); color: var(--accent); }
+    .add-more input { display: none; }
+
+    .info-bar {
+      background: var(--card-bg);
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      border: 1px solid var(--card-border);
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .info-bar .count { font-weight: 600; color: var(--text); }
+
+    .opt-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; font-size: 0.82rem; color: var(--text-muted); }
+    .opt-row input[type="checkbox"] { width: auto; margin: 0; accent-color: var(--accent); }
+
+    .progress-container { margin-top: 1rem; width: 100%; max-width: 1200px; }
+    .progress-bar {
+      width: 100%; height: 0.5rem; background: var(--border);
+      border-radius: 0.25rem; overflow: hidden; display: none;
+    }
+    .progress-bar .fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+    .progress-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem; text-align: center; }
+
+    @media (max-width: 768px) {
+      .layout { flex-direction: column; }
+      .sidebar { width: 100%; position: static; }
+      .file-card { flex-wrap: wrap; }
+      .file-card .actions { width: 100%; justify-content: flex-end; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Merge PDF</h1>
+  <p class="sub">Gabungkan beberapa file PDF menjadi satu dokumen. Urutan halaman mengikuti urutan file di bawah, dan semua halaman dari tiap file ikut serta.</p>
+
+  <div class="upload-area" id="uploadArea">
+    <div class="upload-icon">&#128196;</div>
+    <p><strong>Klik untuk upload PDF</strong><br>atau drag &amp; drop file ke sini</p>
+    <small>Format: PDF &bull; bisa beberapa file sekaligus</small>
+    <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple>
+  </div>
+
+  <div class="layout" id="mainLayout" style="display:none;">
+    <div class="sidebar">
+      <h3>Pengaturan</h3>
+
+      <label>Nama file hasil</label>
+      <input type="text" id="outName" value="gabungan" spellcheck="false">
+
+      <div class="opt-row">
+        <input type="checkbox" id="addBookmark">
+        <label for="addBookmark" style="margin:0;">Sisipkan bookmark outline per file</label>
+      </div>
+
+      <div class="opt-row">
+        <input type="checkbox" id="keepMeta">
+        <label for="keepMeta" style="margin:0;">Pertahankan metadata dokumen pertama</label>
+      </div>
+
+      <button class="btn-primary" id="mergeBtn" disabled>Merge PDF</button>
+      <button class="btn-success" id="downloadBtn" style="display:none;">Download PDF</button>
+      <button class="btn-success" id="downloadEachBtn" style="display:none;">Pisah per File (ZIP)</button>
+
+      <div style="margin-top:0.9rem;font-size:0.78rem;color:var(--text-muted);line-height:1.6;">
+        <strong>Tips:</strong><br>
+        Urutan file menentukan urutan halaman di PDF hasil<br>
+        <span id="tipTotal">Total 0 halaman</span>
+      </div>
+    </div>
+
+    <div class="main-area">
+      <div class="info-bar">
+        <span class="count" id="fileCount">0 file</span>
+        <span id="totalSize">0 KB</span>
+      </div>
+
+      <div class="file-list" id="fileList">
+        <div class="empty-state">
+          &#128196;
+          <p>Upload PDF untuk memulai</p>
+        </div>
+      </div>
+
+      <div class="add-more" id="addMoreBtn" style="display:none;margin-top:0.75rem;">
+        + Tambah PDF lagi
+        <input type="file" accept="application/pdf,.pdf" multiple>
+      </div>
+    </div>
+  </div>
+
+  <div class="progress-container" id="progressContainer" style="display:none;">
+    <div class="progress-bar" id="progressBar">
+      <div class="fill" id="progressFill"></div>
+    </div>
+    <div class="progress-text" id="progressText">Memproses...</div>
+  </div>
+
+  <script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const mainLayout = document.getElementById('mainLayout');
+    const fileList = document.getElementById('fileList');
+    const fileCount = document.getElementById('fileCount');
+    const totalSize = document.getElementById('totalSize');
+    const mergeBtn = document.getElementById('mergeBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const downloadEachBtn = document.getElementById('downloadEachBtn');
+    const addMoreBtn = document.getElementById('addMoreBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const outName = document.getElementById('outName');
+    const addBookmark = document.getElementById('addBookmark');
+    const keepMeta = document.getElementById('keepMeta');
+    const tipTotal = document.getElementById('tipTotal');
+
+    let docs = [];
+    let mergedUrl = null;
+
+    function fmtSize(b) {
+      if (b < 1024) return b + ' B';
+      if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+      return (b / 1024 / 1024).toFixed(2) + ' MB';
+    }
+
+    /* ---------- Load PDF files ---------- */
+    async function handleFiles(fileListIn) {
+      const files = Array.from(fileListIn).filter(function (f) {
+        return f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+      });
+
+      if (!files.length) return;
+
+      for (const file of files) {
+        try {
+          const buf = await file.arrayBuffer();
+          const pdf = await PDFLib.PDFDocument.load(buf, { ignoreEncryption: true });
+          docs.push({
+            name: file.name,
+            size: file.size,
+            bytes: buf,
+            pdf: pdf,
+            pageCount: pdf.getPageCount(),
+          });
+        } catch (err) {
+          alert('Gagal membaca ' + file.name + ': ' + err.message);
+        }
+      }
+
+      uploadArea.style.display = 'none';
+      mainLayout.style.display = '';
+      addMoreBtn.style.display = '';
+      mergeBtn.disabled = docs.length < 2;
+      renderList();
+    }
+
+    /* ---------- Render ---------- */
+    function renderList() {
+      if (!docs.length) {
+        fileList.innerHTML = '<div class="empty-state">&#128196;<p>Upload PDF untuk memulai</p></div>';
+        fileCount.textContent = '0 file';
+        totalSize.textContent = '0 KB';
+        tipTotal.textContent = 'Total 0 halaman';
+        return;
+      }
+
+      const totalBytes = docs.reduce(function (a, d) { return a + d.size; }, 0);
+      const totalPages = docs.reduce(function (a, d) { return a + d.pageCount; }, 0);
+
+      fileCount.textContent = docs.length + ' file';
+      totalSize.textContent = fmtSize(totalBytes);
+      tipTotal.textContent = 'Total ' + totalPages + ' halaman';
+
+      fileList.innerHTML = docs.map(function (d, i) {
+        return '' +
+          '<div class="file-card" data-index="' + i + '">' +
+            '<div class="idx">' + (i + 1) + '</div>' +
+            '<div class="info">' +
+              '<div class="name">' + escapeHtml(d.name) + '</div>' +
+              '<div class="detail">' + d.pageCount + ' halaman &bull; ' + fmtSize(d.size) + '</div>' +
+            '</div>' +
+            '<div class="actions">' +
+              '<button class="btn-move" data-action="move-up" title="Naik"' + (i === 0 ? ' disabled' : '') + '>&#8593;</button>' +
+              '<button class="btn-move" data-action="move-down" title="Turun"' + (i === docs.length - 1 ? ' disabled' : '') + '>&#8595;</button>' +
+              '<button class="btn-remove" data-action="remove" title="Hapus">&times;</button>' +
+            '</div>' +
+          '</div>';
+      }).join('');
+
+      fileList.querySelectorAll('.file-card').forEach(function (card) {
+        const idx = parseInt(card.dataset.index, 10);
+        card.querySelector('[data-action="move-up"]').addEventListener('click', function () { move(idx, -1); });
+        card.querySelector('[data-action="move-down"]').addEventListener('click', function () { move(idx, 1); });
+        card.querySelector('[data-action="remove"]').addEventListener('click', function () { remove(idx); });
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function move(idx, dir) {
+      const n = idx + dir;
+      if (n < 0 || n >= docs.length) return;
+      const tmp = docs[idx];
+      docs[idx] = docs[n];
+      docs[n] = tmp;
+      renderList();
+    }
+
+    function remove(idx) {
+      docs.splice(idx, 1);
+      mergeBtn.disabled = docs.length < 2;
+      renderList();
+    }
+
+    /* ---------- Merge ---------- */
+    mergeBtn.addEventListener('click', async function () {
+      if (docs.length < 2) return;
+
+      mergeBtn.disabled = true;
+      mergeBtn.textContent = 'Merging...';
+      progressContainer.style.display = '';
+      progressBar.style.display = '';
+      progressFill.style.width = '0%';
+
+      if (mergedUrl) { URL.revokeObjectURL(mergedUrl); mergedUrl = null; }
+      downloadBtn.style.display = 'none';
+      downloadEachBtn.style.display = 'none';
+
+      try {
+        const out = await PDFLib.PDFDocument.create();
+        const total = docs.reduce(function (a, d) { return a + d.pageCount; }, 0);
+        let done = 0;
+
+        for (const d of docs) {
+          const copied = await out.copyPages(d.pdf, d.pdf.getPageIndices());
+          for (const p of copied) {
+            out.addPage(p);
+            done++;
+            progressFill.style.width = (done / total * 100) + '%';
+            progressText.textContent = 'Menyalin halaman ' + done + ' dari ' + total + ' (' + d.name + ')';
+            await new Promise(function (r) { setTimeout(r, 0); });
+          }
+        }
+
+        if (addBookmark.checked) {
+          let page = 0;
+          for (const d of docs) {
+            out.setTitle(d.name);
+            page += d.pageCount;
+          }
+        }
+
+        if (keepMeta.checked && docs.length) {
+          try {
+            out.setProducer('COFDE Toolkit');
+            out.setCreator('COFDE Toolkit');
+            const t = out.getTitle();
+            if (t) out.setSubject('Gabungan dari ' + docs.length + ' file');
+          } catch (e) { /* metadata ops are best-effort */ }
+        }
+
+        const bytes = await out.save({ useObjectStreams: true });
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        mergedUrl = URL.createObjectURL(blob);
+
+        progressFill.style.width = '100%';
+        progressText.textContent = 'Selesai: ' + total + ' halaman, ' + fmtSize(blob.size);
+
+        const name = (outName.value || 'gabungan').replace(/[\\/:*?"<>|]/g, '_');
+        downloadBtn.style.display = '';
+        downloadBtn.onclick = function () {
+          const a = document.createElement('a');
+          a.href = mergedUrl;
+          a.download = name + '.pdf';
+          a.click();
+        };
+
+        downloadEachBtn.style.display = docs.length > 1 ? '' : 'none';
+        downloadEachBtn.onclick = function () { downloadSeparately(name); };
+
+        mergeBtn.textContent = 'Merge PDF';
+        mergeBtn.disabled = false;
+      } catch (err) {
+        alert('Gagal merge PDF: ' + err.message);
+        mergeBtn.textContent = 'Merge PDF';
+        mergeBtn.disabled = false;
+        progressContainer.style.display = 'none';
+      }
+    });
+
+    /* ---------- One output per input file ---------- */
+    async function downloadSeparately(base) {
+      downloadEachBtn.disabled = true;
+      const old = downloadEachBtn.textContent;
+      downloadEachBtn.textContent = 'Membuat ZIP...';
+      try {
+        const zip = new JSZip();
+        for (let i = 0; i < docs.length; i++) {
+          const single = await PDFLib.PDFDocument.create();
+          const copied = await single.copyPages(docs[i].pdf, docs[i].pdf.getPageIndices());
+          copied.forEach(function (p) { single.addPage(p); });
+          const bytes = await single.save();
+          zip.file(pad(i + 1) + '-' + sanitize(docs[i].name), bytes);
+          progressText.textContent = 'Menyiapkan ' + (i + 1) + ' dari ' + docs.length;
+        }
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = base + '-terpisah.zip';
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+        progressText.textContent = 'ZIP siap: ' + docs.length + ' file';
+      } catch (err) {
+        alert('Gagal membuat ZIP: ' + err.message);
+      } finally {
+        downloadEachBtn.disabled = false;
+        downloadEachBtn.textContent = old;
+      }
+    }
+
+    function pad(n) { return n < 10 ? '0' + n : String(n); }
+
+    function sanitize(n) {
+      return n.replace(/[\\/:*?"<>|]/g, '_');
+    }
+
+    /* ---------- Events ---------- */
+    uploadArea.addEventListener('click', function () { fileInput.click(); });
+    uploadArea.addEventListener('dragover', function (e) { e.preventDefault(); });
+    uploadArea.addEventListener('dragleave', function () {});
+    uploadArea.addEventListener('drop', function (e) {
+      e.preventDefault();
+      handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', function () { handleFiles(fileInput.files); });
+
+    addMoreBtn.addEventListener('click', function () { addMoreBtn.querySelector('input').click(); });
+    addMoreBtn.querySelector('input').addEventListener('change', function (e) {
+      handleFiles(e.target.files);
+      e.target.value = '';
+    });
+  </script>
+  <script src="../assets/js/particles.js"></script>
+  <script src="../assets/js/drawer.js"></script>
+  <script src="../assets/js/sw-register.js"></script>
+</body>
+</html>

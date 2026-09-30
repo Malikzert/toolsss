@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Split PDF</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    h1 { font-size: 1.75rem; margin-bottom: 0.35rem; }
+    .sub { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; text-align: center; max-width: 56ch; }
+
+    .upload-area {
+      background: var(--card-bg);
+      border: 2px dashed var(--border);
+      border-radius: 1rem;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+      width: 100%;
+      max-width: 600px;
+      backdrop-filter: blur(20px) saturate(150%);
+      -webkit-backdrop-filter: blur(20px) saturate(150%);
+    }
+    .upload-area:hover { border-color: var(--accent); }
+    .upload-area.has-file { border-color: var(--accent); padding: 1.5rem; }
+    .upload-area p { color: var(--text-muted); margin-top: 0.5rem; }
+    .upload-area input { display: none; }
+    .upload-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+    .panel {
+      display: none;
+      width: 100%;
+      max-width: 1100px;
+      margin-top: 1.5rem;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px) saturate(150%);
+      -webkit-backdrop-filter: blur(20px) saturate(150%);
+      border: 1px solid var(--card-border);
+      border-radius: 0.9rem;
+      padding: 1.5rem;
+      box-shadow: var(--card-shadow);
+    }
+    .file-head {
+      display: flex; align-items: center; gap: 0.9rem;
+      padding-bottom: 1rem; margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .file-head .meta { flex: 1; min-width: 0; }
+    .file-head .meta .name { font-weight: 700; color: var(--text); font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-head .meta .detail { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem; }
+    .file-head button {
+      padding: 0.45rem 0.9rem; border: 1px solid var(--border);
+      background: transparent; color: var(--text-muted);
+      border-radius: 0.4rem; cursor: pointer; font-size: 0.8rem; font-weight: 600;
+    }
+    .file-head button:hover { border-color: var(--accent); color: var(--accent); }
+
+    .modes { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .mode-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 0.4rem;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: 0.15s;
+    }
+    .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .mode-btn.on { background: var(--accent); color: var(--on-accent, #fff); border-color: var(--accent); }
+
+    .fields { display: none; }
+    .fields.on { display: block; }
+    .field-row { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1rem; }
+    .field { display: flex; flex-direction: column; gap: 0.3rem; }
+    .field label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+    .field input, .field select {
+      padding: 0.5rem 0.7rem; border: 1px solid var(--border);
+      border-radius: 0.4rem; font-size: 0.9rem; min-width: 8rem;
+      background: var(--card-bg); color: var(--text); outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+
+    .chunk-list { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+    .chunk-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid var(--card-border);
+      border-radius: 0.5rem;
+      background: var(--vx-chip, rgba(127,127,127,0.06));
+      font-size: 0.85rem;
+    }
+    .chunk-row .range { font-weight: 700; color: var(--accent); min-width: 7rem; }
+    .chunk-row .desc { color: var(--text-muted); flex: 1; }
+
+    .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.25rem; }
+    .actions button {
+      padding: 0.65rem 1.3rem; border: none; border-radius: 0.45rem;
+      cursor: pointer; font-size: 0.9rem; font-weight: 700; transition: 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: var(--on-accent, #fff); }
+    .btn-primary:hover { filter: brightness(1.12); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    .hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem; line-height: 1.6; }
+    .hint code { background: var(--vx-chip, rgba(127,127,127,0.12)); padding: 0.1rem 0.35rem; border-radius: 0.25rem; font-size: 0.85em; }
+
+    .progress-container { margin-top: 1rem; width: 100%; max-width: 1100px; }
+    .progress-bar { width: 100%; height: 0.5rem; background: var(--border); border-radius: 0.25rem; overflow: hidden; display: none; }
+    .progress-bar .fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+    .progress-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem; text-align: center; }
+
+    @media (max-width: 640px) {
+      .chunk-row { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Split PDF</h1>
+  <p class="sub">Pecah satu PDF menjadi beberapa file. Bisa per halaman, per rentang yang kamu tentukan, atau otomatis setiap N halaman.</p>
+
+  <div class="upload-area" id="uploadArea">
+    <div class="upload-icon">&#128196;</div>
+    <p><strong>Klik untuk upload PDF</strong><br>atau drag &amp; drop file ke sini</p>
+    <small>Format: PDF</small>
+    <input type="file" id="fileInput" accept="application/pdf,.pdf">
+  </div>
+
+  <div class="panel" id="panel">
+    <div class="file-head">
+      <div class="meta">
+        <div class="name" id="fileName">-</div>
+        <div class="detail" id="fileDetail">-</div>
+      </div>
+      <button id="changeBtn">Ganti File</button>
+    </div>
+
+    <div class="modes" role="group" aria-label="Mode pemecahan">
+      <button class="mode-btn on" data-mode="every">Setiap N Halaman</button>
+      <button class="mode-btn" data-mode="single">Halaman Tertentu</button>
+      <button class="mode-btn" data-mode="range">Rentang Kustom</button>
+    </div>
+
+    <div class="fields on" id="fields-every">
+      <div class="field-row">
+        <div class="field">
+          <label for="everyN">Pecah setiap</label>
+          <input type="number" id="everyN" value="1" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>Dari halaman</label>
+          <input type="number" id="everyFrom" value="1" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>Sampai halaman</label>
+          <input type="number" id="everyTo" min="1" step="1">
+        </div>
+      </div>
+      <p class="hint">Nilai 1 berarti satu file per halaman. Contoh: 10 dengan 30 halaman menghasilkan 3 file.</p>
+    </div>
+
+    <div class="fields" id="fields-single">
+      <p class="hint" style="margin-bottom:1rem;">Ketik nomor halaman yang mau dikeluarkan, dipisah koma. Contoh: <code>1, 3, 7, 12</code></p>
+      <div class="field-row">
+        <div class="field" style="flex:1;">
+          <label for="singleList">Nomor halaman</label>
+          <input type="text" id="singleList" placeholder="1, 3, 7, 12" spellcheck="false" style="width:100%;">
+        </div>
+      </div>
+      <div class="opt-row" style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;">
+        <input type="checkbox" id="singleZip" checked style="accent-color:var(--accent);">
+        <label for="singleZip" style="margin:0;">Gabungkan hasil ke satu file ZIP</label>
+      </div>
+    </div>
+
+    <div class="fields" id="fields-range">
+      <p class="hint" style="margin-bottom:1rem;">Tulis rentang, tiap rentang jadi satu file. Contoh: <code>1-5, 8, 10-14</code></p>
+      <div class="field-row">
+        <div class="field" style="flex:1;">
+          <label for="rangeList">Rentang halaman</label>
+          <input type="text" id="rangeList" placeholder="1-5, 8, 10-14" spellcheck="false" style="width:100%;">
+        </div>
+      </div>
+    </div>
+
+    <div class="chunk-list" id="chunkList"></div>
+
+    <div class="actions">
+      <button class="btn-primary" id="splitBtn">Pecah PDF</button>
+      <button class="btn-ghost" id="downloadZipBtn" style="display:none;">Download Semua (ZIP)</button>
+    </div>
+
+    <p class="hint" id="resultNote" style="display:none;"></p>
+  </div>
+
+  <div class="progress-container" id="progressContainer" style="display:none;">
+    <div class="progress-bar" id="progressBar">
+      <div class="fill" id="progressFill"></div>
+    </div>
+    <div class="progress-text" id="progressText">Memproses...</div>
+  </div>
+
+  <script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const panel = document.getElementById('panel');
+    const fileName = document.getElementById('fileName');
+    const fileDetail = document.getElementById('fileDetail');
+    const changeBtn = document.getElementById('changeBtn');
+    const splitBtn = document.getElementById('splitBtn');
+    const downloadZipBtn = document.getElementById('downloadZipBtn');
+    const resultNote = document.getElementById('resultNote');
+    const chunkList = document.getElementById('chunkList');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+
+    const everyN = document.getElementById('everyN');
+    const everyFrom = document.getElementById('everyFrom');
+    const everyTo = document.getElementById('everyTo');
+    const singleList = document.getElementById('singleList');
+    const singleZip = document.getElementById('singleZip');
+    const rangeList = document.getElementById('rangeList');
+
+    let doc = null;
+    let pageCount = 0;
+    let mode = 'every';
+    let zipUrl = null;
+    let outputs = [];
+
+    function fmtSize(b) {
+      if (b < 1024) return b + ' B';
+      if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+      return (b / 1024 / 1024).toFixed(2) + ' MB';
+    }
+
+    /* ---------- Load ---------- */
+    async function loadFile(file) {
+      try {
+        const buf = await file.arrayBuffer();
+        doc = await PDFLib.PDFDocument.load(buf, { ignoreEncryption: true });
+        pageCount = doc.getPageCount();
+
+        fileName.textContent = file.name;
+        fileDetail.textContent = pageCount + ' halaman &bull; ' + fmtSize(file.size);
+        everyTo.max = String(pageCount);
+        everyTo.value = String(pageCount);
+
+        uploadArea.style.display = 'none';
+        panel.style.display = '';
+        downloadZipBtn.style.display = 'none';
+        resultNote.style.display = 'none';
+
+        updatePreview();
+      } catch (err) {
+        alert('Gagal membaca PDF: ' + err.message);
+      }
+    }
+
+    /* ---------- Mode ---------- */
+    document.querySelectorAll('.mode-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.mode-btn').forEach(function (b) { b.classList.remove('on'); });
+        btn.classList.add('on');
+        mode = btn.dataset.mode;
+        ['every', 'single', 'range'].forEach(function (m) {
+          document.getElementById('fields-' + m).classList.toggle('on', m === mode);
+        });
+        updatePreview();
+      });
+    });
+
+    [everyN, everyFrom, everyTo, singleList, rangeList].forEach(function (el) {
+      el.addEventListener('input', updatePreview);
+      el.addEventListener('change', updatePreview);
+    });
+
+    /* ---------- Chunk planning ---------- */
+    function planChunks() {
+      if (!pageCount) return [];
+
+      if (mode === 'every') {
+        const n = Math.max(1, parseInt(everyN.value, 10) || 1);
+        const from = Math.min(Math.max(1, parseInt(everyFrom.value, 10) || 1), pageCount);
+        const to = Math.min(Math.max(from, parseInt(everyTo.value, 10) || pageCount), pageCount);
+        const out = [];
+        for (let p = from; p <= to; p += n) {
+          out.push({ label: p + '-' + Math.min(p + n - 1, to), from: p - 1, to: Math.min(p + n - 1, to) });
+        }
+        return out;
+      }
+
+      if (mode === 'single') {
+        const parts = singleList.value.split(',').map(function (s) { return parseInt(s.trim(), 10); });
+        return parts
+          .filter(function (p) { return p >= 1 && p <= pageCount; })
+          .map(function (p) { return { label: 'Hal ' + p, from: p - 1, to: p }; });
+      }
+
+      const out = [];
+      rangeList.value.split(',').forEach(function (part) {
+        const s = part.trim();
+        if (!s) return;
+        const m = s.match(/^(\d+)\s*-\s*(\d+)$/);
+        if (m) {
+          let a = parseInt(m[1], 10);
+          let b = parseInt(m[2], 10);
+          if (a > b) { const t = a; a = b; b = t; }
+          a = Math.max(1, a);
+          b = Math.min(pageCount, b);
+          if (a <= b) out.push({ label: a + '-' + b, from: a - 1, to: b });
+        } else {
+          const p = parseInt(s, 10);
+          if (p >= 1 && p <= pageCount) out.push({ label: 'Hal ' + p, from: p - 1, to: p });
+        }
+      });
+      return out;
+    }
+
+    function updatePreview() {
+      const chunks = planChunks();
+      splitBtn.disabled = chunks.length === 0;
+
+      if (!chunks.length) {
+        chunkList.innerHTML = '';
+        return;
+      }
+
+      const total = chunks.reduce(function (a, c) { return a + (c.to - c.from); }, 0);
+      chunkList.innerHTML =
+        '<div class="chunk-row" style="background:transparent;border-style:dashed;">' +
+          '<span class="range">' + chunks.length + ' file</span>' +
+          '<span class="desc">total ' + total + ' dari ' + pageCount + ' halaman akan dikeluarkan</span>' +
+        '</div>' +
+        chunks.slice(0, 60).map(function (c) {
+          return '<div class="chunk-row"><span class="range">' + c.label + '</span>' +
+            '<span class="desc">' + (c.to - c.from) + ' halaman</span></div>';
+        }).join('') +
+        (chunks.length > 60 ? '<div class="chunk-row" style="background:transparent;border-style:dashed;"><span class="desc">... dan ' + (chunks.length - 60) + ' lainnya</span></div>' : '');
+    }
+
+    /* ---------- Split ---------- */
+    splitBtn.addEventListener('click', async function () {
+      if (!doc) return;
+      const chunks = planChunks();
+      if (!chunks.length) return;
+
+      splitBtn.disabled = true;
+      progressContainer.style.display = '';
+      progressBar.style.display = '';
+      progressFill.style.width = '0%';
+      if (zipUrl) { URL.revokeObjectURL(zipUrl); zipUrl = null; }
+      downloadZipBtn.style.display = 'none';
+      resultNote.style.display = 'none';
+
+      outputs = [];
+
+      try {
+        const singleMode = mode === 'single' && singleZip.checked;
+        const zip = singleMode ? new JSZip() : null;
+        const baseName = fileName.textContent.replace(/\.pdf$/i, '');
+        const multi = chunks.length > 1 || singleMode;
+
+        for (let i = 0; i < chunks.length; i++) {
+          const c = chunks[i];
+          const out = await PDFLib.PDFDocument.create();
+          const copied = await out.copyPages(doc, indicesFor(c));
+          copied.forEach(function (p) { out.addPage(p); });
+          const bytes = await out.save({ useObjectStreams: true });
+
+          const label = multi
+            ? baseName + '-' + c.label + '.pdf'
+            : baseName + '.pdf';
+
+          if (zip) {
+            zip.file(label, bytes);
+          } else if (chunks.length === 1) {
+            outputs.push({ name: label, bytes: bytes });
+          } else {
+            downloadBlob(new Blob([bytes], { type: 'application/pdf' }), label);
+          }
+
+          progressFill.style.width = ((i + 1) / chunks.length * 100) + '%';
+          progressText.textContent = 'Membuat file ' + (i + 1) + ' dari ' + chunks.length + ' (' + c.label + ')';
+          await new Promise(function (r) { setTimeout(r, 0); });
+        }
+
+        if (zip) {
+          const blob = await zip.generateAsync({ type: 'blob' });
+          zipUrl = URL.createObjectURL(blob);
+          downloadZipBtn.style.display = '';
+          downloadZipBtn.onclick = function () {
+            const a = document.createElement('a');
+            a.href = zipUrl;
+            a.download = baseName + '-terpisah.zip';
+            a.click();
+          };
+          resultNote.textContent = chunks.length + ' file PDF dibuat. Klik "Download Semua (ZIP)" untuk menyimpannya sekaligus.';
+        } else if (chunks.length === 1) {
+          const blob = new Blob([outputs[0].bytes], { type: 'application/pdf' });
+          downloadBlob(blob, outputs[0].name);
+          resultNote.textContent = '1 file dibuat dan otomatis diunduh.';
+        } else {
+          resultNote.textContent = chunks.length + ' file dibuat. Browser mungkin meminta izin unduhan banyak berkas. Kalau terblokir, pakai mode ZIP.';
+        }
+
+        resultNote.style.display = '';
+        progressText.textContent = 'Selesai.';
+      } catch (err) {
+        alert('Gagal memecah PDF: ' + err.message);
+        progressContainer.style.display = 'none';
+      } finally {
+        splitBtn.disabled = false;
+      }
+    });
+
+    function indicesFor(c) {
+      const idx = [];
+      for (let p = c.from; p < c.to; p++) idx.push(p);
+      return idx;
+    }
+
+    function downloadBlob(blob, name) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    }
+
+    /* ---------- Events ---------- */
+    uploadArea.addEventListener('click', function () { fileInput.click(); });
+    uploadArea.addEventListener('dragover', function (e) { e.preventDefault(); });
+    uploadArea.addEventListener('drop', function (e) {
+      e.preventDefault();
+      const f = e.dataTransfer.files[0];
+      if (f) loadFile(f);
+    });
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files[0]) loadFile(fileInput.files[0]);
+    });
+    changeBtn.addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files[0]) loadFile(fileInput.files[0]);
+    });
+  </script>
+  <script src="../assets/js/particles.js"></script>
+  <script src="../assets/js/drawer.js"></script>
+  <script src="../assets/js/sw-register.js"></script>
+</body>
+</html>

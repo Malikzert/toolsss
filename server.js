@@ -15,6 +15,9 @@ const MIME = {
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',
   '.ico': 'image/x-icon',
+  '.pdf': 'application/pdf',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.zip': 'application/zip',
 };
 
 http.createServer((req, res) => {

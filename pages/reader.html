@@ -72,6 +72,38 @@
     .docx-content table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
     .docx-content td, .docx-content th { border: 1px solid #cbd5e1; padding: 0.5rem; text-align: left; }
     .docx-content img { max-width: 100%; height: auto; }
+
+    /* ── Search ── */
+    .search-bar {
+      display: flex; align-items: center; gap: 0.5rem;
+      margin-bottom: 0.75rem; flex-wrap: wrap;
+    }
+    .search-bar input[type="text"] {
+      flex: 1; min-width: 180px;
+      padding: 0.45rem 0.75rem;
+      border: 1px solid #cbd5e1; border-radius: 0.5rem;
+      font-size: 0.9rem; outline: none; background: white; color: #1e293b;
+    }
+    .search-bar input[type="text"]:focus { border-color: #6366f1; }
+    .search-bar button {
+      padding: 0.45rem 0.85rem; border: none; border-radius: 0.5rem;
+      cursor: pointer; font-size: 0.85rem; font-weight: 500; color: white;
+      background: #6366f1;
+    }
+    .search-bar button:hover:not(:disabled) { background: #5558e6; }
+    .search-bar button:disabled { background: #cbd5e1; cursor: not-allowed; }
+    .search-bar .search-count {
+      font-size: 0.82rem; color: #64748b; min-width: 6.5rem; text-align: center;
+    }
+    .search-bar .case-btn {
+      background: #64748b; padding: 0.45rem 0.7rem; font-size: 0.78rem;
+    }
+    .search-bar .case-btn.on { background: #6366f1; }
+
+    mark.hl {
+      background: #fde047; color: #1e293b; border-radius: 2px; padding: 0 1px;
+    }
+    mark.hl.current { background: #ff4655; color: white; }
   </style>
 </head>
 
@@ -125,6 +157,198 @@
       }
     }
 
+    /* ══════════════════════════════════════════════
+       Search state
+       ══════════════════════════════════════════════ */
+    const search = {
+      pdf: null,
+      pageTexts: [],      // per page: array of { str, x, y, w, h, transform }
+      query: '',
+      caseSensitive: false,
+      hits: [],           // { page, markEl }
+      current: -1,
+    };
+
+    async function indexPages(pdf, totalPages) {
+      search.pageTexts = new Array(totalPages);
+      for (let i = 1; i <= totalPages; i++) {
+        try {
+          const page = await pdf.getPage(i);
+          const tc = await page.getTextContent();
+          const vp = page.getViewport({ scale: 1 });
+          search.pageTexts[i - 1] = tc.items.map(function (it) {
+            const tr = it.transform;
+            const h = Math.hypot(tr[2], tr[3]) || 10;
+            const x = tr[4];
+            const y = vp.height - tr[5] - h;
+            return {
+              str: it.str,
+              x: x, y: y, w: it.width || 0, h: h,
+              fontHeight: h,
+            };
+          }).filter(function (t) { return t.str.trim().length > 0; });
+        } catch (e) {
+          search.pageTexts[i - 1] = [];
+        }
+      }
+    }
+
+    function findInPage(pageIdx) {
+      const items = search.pageTexts[pageIdx] || [];
+      const q = search.caseSensitive ? search.query : search.query.toLowerCase();
+      const results = [];
+      if (!q) return results;
+      for (let i = 0; i < items.length; i++) {
+        const s = search.caseSensitive ? items[i].str : items[i].str.toLowerCase();
+        let idx = s.indexOf(q);
+        while (idx !== -1) {
+          const rel = idx / Math.max(1, items[i].str.length);
+          results.push({
+            page: pageIdx + 1,
+            item: i,
+            start: idx,
+            len: q.length,
+            x: items[i].x + items[i].w * rel,
+            y: items[i].y,
+            h: items[i].h,
+            w: items[i].w * (q.length / Math.max(1, items[i].str.length)),
+          });
+          idx = s.indexOf(q, idx + 1);
+        }
+      }
+      return results;
+    }
+
+    function runSearch(query) {
+      clearHighlights();
+      search.query = query;
+      if (!query) {
+        search.hits = [];
+        search.current = -1;
+        updateSearchCount();
+        return [];
+      }
+      const found = [];
+      for (let p = 0; p < search.pageTexts.length; p++) {
+        found.push.apply(found, findInPage(p));
+      }
+      search.hits = found;
+      search.current = found.length ? 0 : -1;
+      updateSearchCount();
+      return found;
+    }
+
+    function clearHighlights() {
+      document.querySelectorAll('mark.hl').forEach(function (m) {
+        const parent = m.parentNode;
+        parent.replaceChild(document.createTextNode(m.textContent), m);
+        parent.normalize();
+      });
+    }
+
+    function updateSearchCount() {
+      const el = document.getElementById('searchCount');
+      if (!el) return;
+      if (!search.query) el.textContent = '';
+      else if (!search.hits.length) el.textContent = 'Tidak ada';
+      else el.textContent = (search.current + 1) + ' / ' + search.hits.length;
+      const prev = document.getElementById('searchPrev');
+      const next = document.getElementById('searchNext');
+      if (prev) prev.disabled = search.hits.length < 2;
+      if (next) next.disabled = search.hits.length < 2;
+    }
+
+    function highlightVisibleHits(pageNum) {
+      clearHighlights();
+      const host = document.getElementById('textLayer');
+      if (!host) return;
+
+      const items = search.pageTexts[pageNum - 1] || [];
+      if (!items.length) return;
+
+      const canvas = host.parentElement ? host.parentElement.querySelector('canvas') : null;
+      if (!canvas) return;
+
+      // items are in unscaled PDF page space (viewport scale 1)
+      const pageW = items.reduce(function (m, t) { return Math.max(m, t.x + t.w); }, 0) || 1;
+      const dispW = canvas.clientWidth || canvas.width;
+      const k = dispW / pageW;
+
+      search.hits.forEach(function (hit, i) {
+        if (hit.page !== pageNum) return;
+        const item = items[hit.item];
+        if (!item) return;
+        const m = document.createElement('mark');
+        m.className = 'hl' + (i === search.current ? ' current' : '');
+        m.dataset.hitIndex = String(i);
+        m.textContent = item.str.slice(hit.start, hit.start + hit.len);
+        m.style.cssText =
+          'position:absolute;' +
+          'left:' + (hit.x * k) + 'px;' +
+          'top:' + (hit.y * k) + 'px;' +
+          'height:' + Math.max(10, hit.h * k) + 'px;' +
+          'min-width:' + Math.max(3, hit.w * k) + 'px;' +
+          'line-height:' + Math.max(10, hit.h * k) + 'px;';
+        host.appendChild(m);
+      });
+    }
+
+    function gotoHit(delta) {
+      if (!search.hits.length) return;
+      search.current = (search.current + delta + search.hits.length) % search.hits.length;
+      const hit = search.hits[search.current];
+      updateSearchCount();
+      if (hit && typeof gotoPage === 'function') gotoPage(hit.page);
+      const host = document.getElementById('textLayer');
+      if (host) {
+        highlightVisibleHits(hit.page);
+        const cur = host.querySelector('mark.current');
+        if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'center' });
+      }
+    }
+
+    let gotoPage = null;
+
+    function searchBarHTML() {
+      return `
+        <div class="search-bar ss-hide">
+          <input type="text" id="searchInput" placeholder="Cari teks di dokumen..." spellcheck="false">
+          <button class="case-btn" id="searchCase" title="Cocokkan huruf besar/kecil">Aa</button>
+          <button id="searchPrev" disabled title="Hasil sebelumnya">&#8593;</button>
+          <span class="search-count" id="searchCount"></span>
+          <button id="searchNext" disabled title="Hasil berikutnya">&#8595;</button>
+        </div>`;
+    }
+
+    function wireSearch(gotoPageFn) {
+      gotoPage = gotoPageFn;
+      const input = document.getElementById('searchInput');
+      const caseBtn = document.getElementById('searchCase');
+      if (!input) return;
+      let t = null;
+      input.addEventListener('input', function () {
+        clearTimeout(t);
+        t = setTimeout(function () {
+          const hits = runSearch(input.value);
+          if (hits.length) {
+            const page = hits[0].page;
+            if (typeof gotoPage === 'function') gotoPage(page);
+          }
+        }, 220);
+      });
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); gotoHit(e.shiftKey ? -1 : 1); }
+        if (e.key === 'Escape') { input.value = ''; runSearch(''); }
+      });
+      caseBtn?.addEventListener('click', function () {
+        search.caseSensitive = !search.caseSensitive;
+        caseBtn.classList.toggle('on', search.caseSensitive);
+        if (input.value) runSearch(input.value);
+      });
+      document.getElementById('searchPrev')?.addEventListener('click', () => gotoHit(-1));
+      document.getElementById('searchNext')?.addEventListener('click', () => gotoHit(1));
+    }
+
     /* ───────── PDF ───────── */
     async function processPDF(file) {
       const arrayBuffer = await file.arrayBuffer();
@@ -132,10 +356,19 @@
       const totalPages = pdf.numPages;
       let currentPage = 1;
 
+      search.pdf = pdf;
+      const idx = document.createElement('div');
+      idx.style.cssText = 'font-size:0.8rem;color:#94a3b8;margin-bottom:0.5rem;';
+      idx.textContent = 'Membangun indeks pencarian...';
+      content.innerHTML = `<div class="card">${idx.outerHTML}</div>`;
+      await indexPages(pdf, totalPages);
+      idx.textContent = '';
+
       function renderView(pageNum) {
         content.innerHTML = `
           <div class="card">
             <div class="filename">${file.name}</div>
+            ${searchBarHTML()}
             <div class="page-nav">
               <button id="prevBtn" ${pageNum <= 1 ? 'disabled' : ''}>Sebelumnya</button>
               <span>Halaman ${pageNum} dari ${totalPages}</span>
@@ -153,6 +386,20 @@
         document.getElementById('nextBtn')?.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; renderView(currentPage); } });
         document.getElementById('allBtn')?.addEventListener('click', () => renderAllPDF(pdf, file.name, totalPages));
         document.getElementById('ssBtn')?.addEventListener('click', () => captureScreenshot('pdfContainer'));
+
+        wireSearch(function (p) {
+          if (p !== currentPage && p >= 1 && p <= totalPages) {
+            currentPage = p;
+            renderView(p);
+          }
+        });
+        if (search.query) {
+          const hits = runSearch(search.query);
+          if (hits.length) {
+            const onPage = hits.findIndex(function (h) { return h.page === currentPage; });
+            if (onPage !== -1) search.current = onPage;
+          }
+        }
       }
 
       renderView(1);
@@ -171,13 +418,23 @@
       const container = document.getElementById(containerId);
       if (container) {
         container.innerHTML = '';
+        container.style.position = 'relative';
+        canvas.style.display = 'block';
         container.appendChild(canvas);
+
+        const layer = document.createElement('div');
+        layer.id = 'textLayer';
+        layer.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;';
+        container.appendChild(layer);
+
+        if (search.query) highlightVisibleHits(pageNum);
       }
     }
 
     async function renderAllPDF(pdf, filename, totalPages) {
       content.innerHTML = '<div class="loading card">Merender semua halaman...</div>';
       let html = `<div class="card"><div class="filename">${filename}</div>`;
+      html += searchBarHTML();
       html += '<div style="margin-bottom:0.75rem;display:flex;gap:0.5rem;"><button id="backSingleBtn" class="ss-hide" style="background:#64748b;color:white;border:none;padding:0.4rem 1rem;border-radius:0.5rem;cursor:pointer;">&larr; Per Halaman</button><button id="ssAllBtn" class="ss-hide" style="background:#22c55e;color:white;border:none;padding:0.4rem 1rem;border-radius:0.5rem;cursor:pointer;">SS Bergulir</button></div>';
       html += '<div id="pdfAllPages">';
 
@@ -191,13 +448,45 @@
         const ctx = canvas.getContext('2d');
         await page.render({ canvasContext: ctx, viewport }).promise;
         const dataUrl = canvas.toDataURL();
-        html += `<div style="margin-bottom:1.5rem;"><p style="font-weight:600;margin-bottom:0.25rem;color:#475569;">Halaman ${i}</p><img src="${dataUrl}" style="width:100%;height:auto;border:1px solid #e2e8f0;border-radius:0.25rem;"></div>`;
+        html += `<div class="all-page-wrap" data-page="${i}" style="margin-bottom:1.5rem;"><p style="font-weight:600;margin-bottom:0.25rem;color:#475569;">Halaman ${i}</p><img src="${dataUrl}" style="width:100%;height:auto;border:1px solid #e2e8f0;border-radius:0.25rem;"></div>`;
       }
 
       html += `</div><div class="meta">${totalPages} halaman</div></div>`;
       content.innerHTML = html;
-      document.getElementById('backSingleBtn')?.addEventListener('click', () => processPDF({ name: filename, arrayBuffer: async () => null }));
+      document.getElementById('backSingleBtn')?.addEventListener('click', () => renderAllToSingle(pdf, filename, totalPages));
       document.getElementById('ssAllBtn')?.addEventListener('click', () => captureScreenshot('#pdfAllPages'));
+      wireSearch(function (p) {
+        const wrap = content.querySelector('.all-page-wrap[data-page="' + p + '"]');
+        if (wrap && wrap.scrollIntoView) wrap.scrollIntoView({ block: 'start' });
+      });
+    }
+
+    function renderAllToSingle(pdf, filename, totalPages) {
+      let currentPage = 1;
+      function view(pageNum) {
+        content.innerHTML = `
+          <div class="card">
+            <div class="filename">${filename}</div>
+            ${searchBarHTML()}
+            <div class="page-nav">
+              <button id="prevBtn" ${pageNum <= 1 ? 'disabled' : ''}>Sebelumnya</button>
+              <span>Halaman ${pageNum} dari ${totalPages}</span>
+              <button id="nextBtn" ${pageNum >= totalPages ? 'disabled' : ''}>Selanjutnya</button>
+              <button id="allBtn" style="margin-left:auto;background:#64748b;">Tampilkan Semua</button>
+              <button id="ssBtn" style="background:#22c55e;">SS Bergulir</button>
+            </div>
+            <div id="pdfContainer" class="pdf-page"><p style="color:#94a3b8;">Merender...</p></div>
+          </div>`;
+        renderPageToCanvas(pdf, pageNum, 'pdfContainer');
+        document.getElementById('prevBtn')?.addEventListener('click', () => { if (currentPage > 1) { currentPage--; view(currentPage); } });
+        document.getElementById('nextBtn')?.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; view(currentPage); } });
+        document.getElementById('allBtn')?.addEventListener('click', () => renderAllPDF(pdf, filename, totalPages));
+        document.getElementById('ssBtn')?.addEventListener('click', () => captureScreenshot('pdfContainer'));
+        wireSearch(function (p) {
+          if (p !== currentPage && p >= 1 && p <= totalPages) { currentPage = p; view(p); }
+        });
+      }
+      view(1);
     }
 
     /* ───────── SS Bergulir ───────── */
@@ -256,13 +545,115 @@
             <div class="filename">${file.name}</div>
             <button id="ssDocxBtn" class="ss-hide" style="background:#22c55e;color:white;border:none;padding:0.4rem 1rem;border-radius:0.5rem;cursor:pointer;font-size:0.85rem;">SS Bergulir</button>
           </div>
-          <div class="docx-content text">${result.value}</div>
+          <div class="search-bar ss-hide">
+            <input type="text" id="searchInput" placeholder="Cari teks di dokumen..." spellcheck="false">
+            <button class="case-btn" id="searchCase" title="Cocokkan huruf besar/kecil">Aa</button>
+            <button id="searchPrev" disabled title="Hasil sebelumnya">&#8593;</button>
+            <span class="search-count" id="searchCount"></span>
+            <button id="searchNext" disabled title="Hasil berikutnya">&#8595;</button>
+          </div>
+          <div class="docx-content text" id="docxBody">${result.value}</div>
           ${result.messages.filter(m => m.type === 'warning').length > 0
             ? `<div class="meta" style="margin-top:0.75rem;">Catatan: ${result.messages.filter(m => m.type === 'warning').length} peringatan (format kompleks mungkin tidak sempurna)</div>`
             : ''}
         </div>
       `;
       document.getElementById('ssDocxBtn')?.addEventListener('click', () => captureScreenshot('.docx-content'));
+      wireDocxSearch();
+    }
+
+    function wireDocxSearch() {
+      const input = document.getElementById('searchInput');
+      const body = document.getElementById('docxBody');
+      const caseBtn = document.getElementById('searchCase');
+      if (!input || !body) return;
+
+      let caseSensitive = false;
+      const original = body.innerHTML;
+      let marks = [];
+      let current = -1;
+
+      function clearDocx() {
+        body.innerHTML = original;
+        marks = [];
+        current = -1;
+      }
+
+      function apply() {
+        clearDocx();
+        const q = input.value;
+        if (!q) {
+          updateCount();
+          return;
+        }
+        const needle = caseSensitive ? q : q.toLowerCase();
+        const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT, null);
+        const targets = [];
+        let n;
+        while ((n = walker.nextNode())) {
+          const hay = caseSensitive ? n.nodeValue : n.nodeValue.toLowerCase();
+          if (hay.indexOf(needle) !== -1) targets.push(n);
+        }
+        targets.forEach(function (node) {
+          const text = node.nodeValue;
+          const hay = caseSensitive ? text : text.toLowerCase();
+          const frag = document.createDocumentFragment();
+          let i = 0;
+          let idx = hay.indexOf(needle);
+          while (idx !== -1) {
+            if (idx > i) frag.appendChild(document.createTextNode(text.slice(i, idx)));
+            const m = document.createElement('mark');
+            m.className = 'hl';
+            m.textContent = text.slice(idx, idx + needle.length);
+            frag.appendChild(m);
+            i = idx + needle.length;
+            idx = hay.indexOf(needle, i);
+          }
+          if (i < text.length) frag.appendChild(document.createTextNode(text.slice(i)));
+          node.parentNode.replaceChild(frag, node);
+        });
+        marks = Array.prototype.slice.call(body.querySelectorAll('mark.hl'));
+        current = marks.length ? 0 : -1;
+        updateCount();
+        focusCurrent();
+      }
+
+      function updateCount() {
+        const el = document.getElementById('searchCount');
+        if (el) el.textContent = input.value ? (marks.length ? (current + 1) + ' / ' + marks.length : 'Tidak ada') : '';
+        const p = document.getElementById('searchPrev');
+        const n = document.getElementById('searchNext');
+        if (p) p.disabled = marks.length < 2;
+        if (n) n.disabled = marks.length < 2;
+      }
+
+      function focusCurrent() {
+        marks.forEach(function (m, i) { m.classList.toggle('current', i === current); });
+        if (marks[current] && marks[current].scrollIntoView) {
+          marks[current].scrollIntoView({ block: 'center' });
+        }
+      }
+
+      function step(d) {
+        if (!marks.length) return;
+        current = (current + d + marks.length) % marks.length;
+        updateCount();
+        focusCurrent();
+      }
+
+      let t = null;
+      input.addEventListener('input', function () { clearTimeout(t); t = setTimeout(apply, 220); });
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); step(e.shiftKey ? -1 : 1); }
+        if (e.key === 'Escape') { input.value = ''; apply(); }
+      });
+      caseBtn?.addEventListener('click', function () {
+        caseSensitive = !caseSensitive;
+        caseBtn.classList.toggle('on', caseSensitive);
+        apply();
+      });
+      document.getElementById('searchPrev')?.addEventListener('click', () => step(-1));
+      document.getElementById('searchNext')?.addEventListener('click', () => step(1));
     }
   </script>
   <script src="../assets/js/particles.js"></script>
