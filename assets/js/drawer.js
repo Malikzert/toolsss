@@ -76,15 +76,14 @@
   var flash = document.createElement('div');
   flash.className = 'vx-flash';
 
-  /* ── Refresh paksa: efek gasing + percikan api ── */
+  /* ── Refresh paksa: logo statis, meledak jadi kobaran api ── */
   var refresh = document.createElement('button');
   refresh.type = 'button';
   refresh.className = 'vx-refresh';
   refresh.setAttribute('aria-label', 'Muat ulang paksa');
   refresh.title = 'Muat ulang paksa';
   refresh.innerHTML =
-    '<span class="vx-flame" aria-hidden="true"></span>' +
-    '<span class="vx-flame-tip" aria-hidden="true"></span>' +
+    '<span class="vx-blaze" aria-hidden="true"></span>' +
     '<span class="vx-can" aria-hidden="true"><i></i><b></b><s></s></span>';
 
   var refreshing = false;
@@ -93,14 +92,6 @@
     refreshing = true;
     refresh.classList.add('spinning');
     refresh.setAttribute('aria-busy', 'true');
-
-    var r = refresh.getBoundingClientRect();
-    if (window.COFDE_FX && typeof COFDE_FX.spark === 'function') {
-      COFDE_FX.spark(r.left + r.width / 2, r.top + r.height / 2, 46);
-      window.setTimeout(function () {
-        COFDE_FX.spark(r.left + r.width / 2, r.top + r.height / 2, 26);
-      }, 170);
-    }
 
     /* Buang cache app supaya berkas terunduh ulang, lalu muat halaman. */
     window.setTimeout(function () {

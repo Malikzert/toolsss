@@ -38,6 +38,10 @@
 
   var currentTheme = readStored();
 
+  /* Kaca hanya untuk tema terang. Tema gelap (abyss) hanya kilat +
+     hujan deras, jadi shard/mote/fleck tidak digambar sama sekali. */
+  function glassOn() { return currentTheme !== 'abyss'; }
+
   /* ── Canvas Setup ── */
   var canvas = document.createElement('canvas');
   canvas.style.cssText =
@@ -119,6 +123,7 @@
 
   function trackPointer(e) {
     if (reduceMotion) return;
+    if (!glassOn()) return;
     if (flecks.length >= MAX_FLECKS) return;
 
     var x = e.clientX;
@@ -249,34 +254,41 @@
   function loop() {
     ctx.clearRect(0, 0, W, H);
 
-    while (shards.length < MAX_SHARDS) shards.push(spawnShard());
-    while (motes.length < MAX_MOTES) motes.push(spawnMote());
+    if (glassOn()) {
+      while (shards.length < MAX_SHARDS) shards.push(spawnShard());
+      while (motes.length < MAX_MOTES) motes.push(spawnMote());
 
-    for (var i = shards.length - 1; i >= 0; i--) {
-      var p = shards[i];
-      p.wob += p.wobSpeed;
-      p.rot += p.vr;
-      p.x += p.vx + Math.sin(p.wob) * p.wobAmp;
-      p.y += p.vy;
-      if (p.y < -30) shards.splice(i, 1);
-    }
+      for (var i = shards.length - 1; i >= 0; i--) {
+        var p = shards[i];
+        p.wob += p.wobSpeed;
+        p.rot += p.vr;
+        p.x += p.vx + Math.sin(p.wob) * p.wobAmp;
+        p.y += p.vy;
+        if (p.y < -30) shards.splice(i, 1);
+      }
 
-    for (var j = motes.length - 1; j >= 0; j--) {
-      var m = motes[j];
-      m.x += m.vx;
-      m.y += m.vy;
-      if (m.y < -m.r * 2) motes.splice(j, 1);
-    }
+      for (var j = motes.length - 1; j >= 0; j--) {
+        var m = motes[j];
+        m.x += m.vx;
+        m.y += m.vy;
+        if (m.y < -m.r * 2) motes.splice(j, 1);
+      }
 
-    for (var k = flecks.length - 1; k >= 0; k--) {
-      var f = flecks[k];
-      f.vy += f.gravity;
-      f.vx *= 0.985;
-      f.rot += f.vr;
-      f.x += f.vx;
-      f.y += f.vy;
-      f.life -= f.decay;
-      if (f.life <= 0 || f.y > H + 40) flecks.splice(k, 1);
+      for (var k = flecks.length - 1; k >= 0; k--) {
+        var f = flecks[k];
+        f.vy += f.gravity;
+        f.vx *= 0.985;
+        f.rot += f.vr;
+        f.x += f.vx;
+        f.y += f.vy;
+        f.life -= f.decay;
+        if (f.life <= 0 || f.y > H + 40) flecks.splice(k, 1);
+      }
+    } else if (shards.length || motes.length || flecks.length) {
+      /* Tema gelap: buang sisa pecahan kaca seketika. */
+      shards.length = 0;
+      motes.length = 0;
+      flecks.length = 0;
     }
 
     for (var s2 = sparks.length - 1; s2 >= 0; s2--) {
@@ -290,9 +302,11 @@
       if (sp.life <= 0 || sp.y > H + 40) sparks.splice(s2, 1);
     }
 
-    drawMotes();
-    drawShards();
-    drawFlecks();
+    if (glassOn()) {
+      drawMotes();
+      drawShards();
+      drawFlecks();
+    }
     drawSparks();
 
     requestAnimationFrame(loop);

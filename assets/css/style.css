@@ -785,7 +785,7 @@ h1 {
   text-transform: uppercase;
 }
 
-/* ── Refresh paksa: gasing + api pelangi çok çok cepat ── */
+/* ── Refresh paksa: logo statis, meledak jadi kobaran api ── */
 .vx-refresh {
   position: fixed;
   top: 1rem;
@@ -814,50 +814,36 @@ h1 {
   transform: translateY(-1px);
 }
 
-/* Api pelangi: tiga lapis conic, sangat cepat, hanya saat hover. */
-.vx-flame {
+/* Kobaran api: lidah besar yang menyala hanya saat refresh ditekan. */
+.vx-blaze {
   position: absolute;
-  inset: -35%;
-  border-radius: 50%;
+  inset: -70% -35% -30%;
   opacity: 0;
   pointer-events: none;
+  transform-origin: 50% 92%;
   background:
-    conic-gradient(from 0deg,
-      #ff2d55, #ff8a3c, #ffd166, #2ee6a8, #2ee6d6,
-      #5aa9ff, #a06bff, #ff2d55);
-  filter: blur(7px);
+    radial-gradient(46% 66% at 50% 96%,
+      rgba(255, 244, 200, 0.95) 0%,
+      rgba(255, 196, 96, 0.85) 26%,
+      rgba(255, 122, 48, 0.7) 48%,
+      rgba(255, 60, 60, 0.32) 66%,
+      rgba(255, 60, 60, 0) 80%),
+    radial-gradient(26% 46% at 36% 94%,
+      rgba(255, 255, 220, 0.85) 0%, rgba(255, 150, 50, 0) 72%),
+    radial-gradient(26% 46% at 64% 94%,
+      rgba(255, 236, 180, 0.8) 0%, rgba(255, 122, 48, 0) 72%);
+  filter: blur(1px) saturate(150%);
+  clip-path: polygon(50% 0, 63% 30%, 58% 44%, 78% 40%,
+    70% 100%, 30% 100%, 22% 40%, 42% 44%, 37% 30%);
   transition: opacity 0.16s ease;
 }
 
-.vx-refresh:hover .vx-flame,
-.vx-refresh.spinning .vx-flame {
-  opacity: 0.85;
-  animation: vx-flame-spin 0.18s linear infinite;
-}
-
-/* Lidah api di atas gasing. */
-.vx-flame-tip {
-  position: absolute;
-  top: 0.22rem;
-  left: 50%;
-  width: 0.85rem;
-  height: 0.5rem;
-  margin-left: -0.425rem;
-  opacity: 0;
-  pointer-events: none;
-  background: conic-gradient(from 90deg, #ffd166, #ff8a3c, #ff2d55, #ffd166);
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-  filter: drop-shadow(0 0 5px rgba(255, 138, 60, 0.9));
-  transition: opacity 0.16s ease;
-}
-
-.vx-refresh:hover .vx-flame-tip,
-.vx-refresh.spinning .vx-flame-tip {
+.vx-refresh.spinning .vx-blaze {
   opacity: 1;
-  animation: vx-flame-jit 0.12s steps(2, end) infinite;
+  animation: vx-blaze 0.44s ease-in-out infinite;
 }
 
-/* Gasing (jerry can) di tengah tombol. */
+/* Jerami logo (jerry can) di tengah tombol — statis. */
 .vx-can {
   position: relative;
   width: 0.95rem;
@@ -868,7 +854,7 @@ h1 {
 }
 
 .vx-refresh:hover .vx-can { transform: translateY(-0.08rem) scale(1.06); }
-.vx-refresh.spinning .vx-can { animation: vx-gasing 0.55s cubic-bezier(0.5, 0, 0.5, 1) infinite; }
+.vx-refresh.spinning .vx-can { transform: translateY(-0.02rem) scale(1.02); }
 
 .vx-can i {
   position: absolute;
@@ -898,33 +884,15 @@ h1 {
   text-decoration: none;
 }
 
-@keyframes vx-flame-spin {
-  from { transform: rotate(0deg) scale(1.15); }
-  to   { transform: rotate(360deg) scale(1.15); }
-}
-
-@keyframes vx-flame-jit {
-  0%   { transform: translateX(-0.07rem) scaleY(0.86); }
-  50%  { transform: translateX(0.07rem) scaleY(1.14); }
-  100% { transform: translateX(-0.04rem) scaleY(0.94); }
-}
-
-@keyframes vx-gasing {
-  0%   { transform: rotate(0deg); }
-  50%  { transform: rotate(160deg); }
-  100% { transform: rotate(360deg); }
+@keyframes vx-blaze {
+  0%   { transform: scale(0.86) translateY(6%); opacity: 0.65; }
+  38%  { transform: scale(1.05) translateY(-3%) scaleX(0.94); opacity: 1; }
+  62%  { transform: scale(0.98) translateY(-1%) scaleX(1.05); opacity: 0.92; }
+  100% { transform: scale(0.9) translateY(5%); opacity: 0.7; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vx-refresh.spinning .vx-can,
-  .vx-refresh:hover .vx-flame,
-  .vx-refresh.spinning .vx-flame,
-  .vx-refresh:hover .vx-flame-tip,
-  .vx-refresh.spinning .vx-flame-tip { animation: none; }
-  .vx-refresh:hover .vx-flame,
-  .vx-refresh.spinning .vx-flame { opacity: 0.6; }
-  .vx-refresh:hover .vx-flame-tip,
-  .vx-refresh.spinning .vx-flame-tip { opacity: 1; }
+  .vx-refresh.spinning .vx-blaze { animation: none; opacity: 1; }
 }
 
 /* ── Blink: light sweep on open ── */

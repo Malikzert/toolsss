@@ -220,6 +220,9 @@
     var dt = lastFrame ? Math.min((ts - lastFrame) / 1000, 0.05) : 0.016;
     lastFrame = ts;
 
+    /* Majukan setiap tetes dulu; tanpa ini hujan hanya tergambar diam. */
+    for (var di = 0; di < drops.length; di++) stepDrop(drops[di], dt);
+
     ctx.clearRect(0, 0, W, H);
     drawRain(1);
     drawRipples();
