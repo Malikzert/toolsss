@@ -115,6 +115,8 @@
   margin-bottom: 0.5rem;
 }
 
+/* Dibuat mandiri (bukan mewarisi listdiff.css) karena timer.html dan
+   random.html memakai kelas yang sama tanpa memuat listdiff.css. */
 .lf-badge {
   display: inline-block;
   min-width: 1.4rem;
@@ -124,7 +126,8 @@
   text-align: center;
   color: var(--vx-on-accent, #fff);
   background: var(--vx-dim);
-  border-radius: 999px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5px),
+    calc(100% - 5px) 100%, 0 100%);
 }
 
 .lf-list {

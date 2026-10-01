@@ -5,14 +5,13 @@
      ══════════════════════════════════════════ */
 
   /* ── Theme Registry ── */
+  /* Dua tema saja:
+     lightholy = terang, pecahan kaca
+     abyss     = gelap, kilat + hujan deras diagonal kanan ke kiri */
   var THEMES = {
     lightholy: {
       label: 'Lightholy',
       tint: ['#ffd9a0', '#ffc46b', '#f0b45c', '#fff0cd', '#ffe3b3']
-    },
-    darkside: {
-      label: 'Darkside',
-      tint: ['#ff4655', '#ff7a86', '#e63946', '#ff9aa4', '#c92a3a']
     },
     abyss: {
       label: 'Abyss',
@@ -20,9 +19,13 @@
     }
   };
 
-  var DEFAULT_THEME = 'lightholy';
+  var DEFAULT_THEME = 'abyss';
   var STORAGE_KEY = 'fire-theme';
-  var LEGACY = { light: 'lightholy', dark: 'darkside', green: 'lightholy', purple: 'abyss' };
+  /* Nilai lama dipetakan ke dua tema yang sah supaya tidak blank. */
+  var LEGACY = {
+    light: 'lightholy', lightholy: 'lightholy', green: 'lightholy',
+    dark: 'abyss', darkside: 'abyss', abyss: 'abyss', purple: 'abyss', system: 'abyss'
+  };
 
   function readStored() {
     var raw;

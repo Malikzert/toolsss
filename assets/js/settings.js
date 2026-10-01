@@ -11,7 +11,7 @@
   var current = null;
 
   function defaults() {
-    var d = { appearance: 'system', currency: 'IDR', dateFormat: 'DD/MM/YYYY' };
+    var d = { appearance: 'abyss', currency: 'IDR', dateFormat: 'DD/MM/YYYY' };
     try {
       var f = window.COFDE && window.COFDE.fmt;
       if (f && f.DEFAULT_SETTINGS) {
@@ -23,30 +23,37 @@
 
   function read() {
     var d = defaults();
-    var parsed = null;
+    var stored = null;
     try {
       var raw = localStorage.getItem(KEY);
       if (raw) {
-        parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') {
+        stored = JSON.parse(raw);
+        if (stored && typeof stored === 'object') {
           Object.keys(d).forEach(function (k) {
-            if (parsed[k] !== undefined && parsed[k] !== null) d[k] = parsed[k];
+            if (stored[k] !== undefined && stored[k] !== null) d[k] = stored[k];
           });
         }
       }
     } catch (e) {
       /* localStorage diblokir atau JSON rusak: pakai default, jangan crash. */
     }
-    /* Tema lama 'fire-theme' dipakai agar migrasi dari versi
-       sebelumnya tidak gelap/muda sendiri — TAPI hanya bila pengguna
-       belum menyimpan pilihan appearance secara eksplisit. Kalau sudah
-       memilih Light/Dark/System, pilihan itu tidak boleh ditimpa sisa
-       tema lama. */
-    try {
-      var t = localStorage.getItem('fire-theme');
-      var explicit = !!(parsed && parsed.appearance !== undefined && parsed.appearance !== null && parsed.appearance !== '');
-      if (t && !current && !explicit && ['lightholy', 'darkside', 'abyss'].indexOf(t) >= 0) d.appearance = t;
-    } catch (e2) { /* abaikan */ }
+
+    /* Hanya dua tema yang sah: 'lightholy' (terang, pecahan kaca) dan
+       'abyss' (gelap, kilat + hujan). Pilihan tersimpan yang lama
+       (darkside/system/light/dark) dinormalkan di sini supaya tidak
+       pernah muncul sebagai tema tak dikenal. */
+    var ap = (stored && stored.appearance) ? stored.appearance : null;
+    if (ap === 'lightholy' || ap === 'light') {
+      d.appearance = 'lightholy';
+    } else if (ap) {
+      d.appearance = 'abyss';
+    } else {
+      /* Belum pernah memilih: hormati cermin lama kalau ada. */
+      try {
+        d.appearance = localStorage.getItem('fire-theme') === 'lightholy'
+          ? 'lightholy' : 'abyss';
+      } catch (e2) { d.appearance = 'abyss'; }
+    }
     return d;
   }
 
@@ -86,22 +93,8 @@
     };
   }
 
-  function prefersDark() {
-    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  }
-
-  /* Sumber kebenaran tunggal tema adalah 'cofde_settings'.appearance:
-     - 'lightholy'/'darkside'/'abyss' = tema tetap
-     - 'system'                         = ikuti OS
-     - 'light'/'dark'                   = nilai lama, dipetakan di sini
-     'fire-theme' hanya cermin untuk halaman lama yang tidak memuat
-     settings.js, jadi tema selalu sama di semua fitur. */
   function resolvedTheme() {
-    var s = get();
-    if (s.appearance === 'dark') return 'darkside';
-    if (s.appearance === 'light') return 'lightholy';
-    if (['lightholy', 'darkside', 'abyss'].indexOf(s.appearance) >= 0) return s.appearance;
-    return prefersDark() ? 'abyss' : 'lightholy';
+    return get().appearance === 'lightholy' ? 'lightholy' : 'abyss';
   }
 
   function applyAppearance() {
@@ -124,13 +117,6 @@
   function init() {
     get();
     applyAppearance();
-    /* Ikuti perubahan OS saat mode 'system'. */
-    if (window.matchMedia) {
-      var mq = window.matchMedia('(prefers-color-scheme: dark)');
-      var onChangeMQ = function () { if (get().appearance === 'system') applyAppearance(); };
-      if (mq.addEventListener) mq.addEventListener('change', onChangeMQ);
-      else if (mq.addListener) mq.addListener(onChangeMQ);
-    }
   }
 
   function reset() {
@@ -153,7 +139,7 @@
     ['appearance', 'currency', 'dateFormat', 'customCurrencyCode', 'customCurrencySymbol'].forEach(function (k) {
       if (obj.settings[k] !== undefined) patch[k] = obj.settings[k];
     });
-    if (patch.appearance && ['light', 'dark', 'system', 'lightholy', 'darkside', 'abyss'].indexOf(patch.appearance) < 0) {
+    if (patch.appearance && ['lightholy', 'abyss'].indexOf(patch.appearance) < 0) {
       throw new Error('Nilai appearance tidak valid: ' + patch.appearance);
     }
     set(patch);

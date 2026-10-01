@@ -1,0 +1,436 @@
+/* ══════════════════════════════════════════════════════════
+   COFDE — VALO Skin Layer
+   Dimuat SETELAH style.css, jadi menimpa tanpa menyalin aturan
+   dasar. Dua mode saja:
+
+     lightholy → terang, motif pecahan kaca
+     abyss     → gelap, motif kilat + hujan deras diagonal
+                 kanan atas ke kiri bawah, hover memakai percikan api
+
+   Semua nilai warna lewat var(--vx-*) supaya tetap sinkron dengan
+   style.css dan bisa diubah dari Settings.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Token tambahan VALO ── */
+:root,
+[data-theme="lightholy"] {
+  /* Kaca: bening terang, tepi tipis, sudut Valorant miring. */
+  --val-shard-1: rgba(255, 255, 255, 0.62);
+  --val-shard-2: rgba(255, 226, 176, 0.5);
+  --val-shard-3: rgba(255, 255, 255, 0.9);
+  --val-hover-fill: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.34) 0%,
+    rgba(255, 255, 255, 0) 38%);
+  --val-edge-soft: rgba(22, 22, 28, 0.1);
+  --val-sky-rain: 0;
+}
+
+[data-theme="abyss"] {
+  /* Api: oranye/emas menyala untuk hover, bukan kaca. */
+  --val-shard-1: rgba(46, 230, 214, 0.14);
+  --val-shard-2: rgba(90, 169, 255, 0.1);
+  --val-shard-3: rgba(180, 255, 250, 0.22);
+  --val-hover-fill: radial-gradient(120% 90% at 50% 118%,
+    rgba(255, 138, 60, 0.42) 0%,
+    rgba(255, 209, 102, 0.18) 34%,
+    rgba(255, 138, 60, 0) 70%);
+  --val-edge-soft: rgba(120, 214, 230, 0.18);
+  /* Hujan dan kilat digambar valo-sky.js di belakang konten. */
+  --val-sky-rain: 1;
+}
+
+/* ── Sudut Valorant: potong diagonal kanan-bawah ── */
+:root {
+  --val-cut: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+  --val-cut-sm: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+  --val-cut-lg: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+}
+
+/* ── Overlay hover: kaca (terang) / api (gelap) ──
+   Elemen .val-peel disuntik valo-ui.js ke dalam tiap kartu supaya
+   tidak bentrok dengan ::before/::after yang sudah dipakai kartu.
+   Kartu memakai clip-path sehingga overlay otomatis terpotong. */
+.val-peel {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Tema terang: pecahan kaca, kilau menyapu diagonal. */
+[data-theme="lightholy"] .val-peel {
+  background:
+    linear-gradient(112deg, transparent 34%, var(--val-shard-3) 47%,
+      transparent 60%) no-repeat,
+    linear-gradient(112deg, transparent 52%, var(--val-shard-1) 62%,
+      transparent 74%) no-repeat;
+  background-size: 260% 260%, 190% 190%;
+  background-position: 140% 0%, 160% 30%;
+  transition: background-position 0.55s ease, opacity 0.3s ease;
+}
+
+[data-theme="lightholy"] .valo-surface:hover .val-peel {
+  opacity: 0.95;
+  background-position: -40% 0%, -60% 30%;
+}
+
+/* Tema gelap: pecahan kaca diganti percikan api yang naik. */
+[data-theme="abyss"] .val-peel {
+  background: radial-gradient(90% 70% at 50% 120%,
+    rgba(255, 209, 102, 0.3) 0%, rgba(255, 138, 60, 0) 68%);
+}
+
+[data-theme="abyss"] .valo-surface:hover .val-peel {
+  opacity: 1;
+  animation: val-ember 0.42s ease-out;
+}
+
+@keyframes val-ember {
+  0%   { transform: translateY(26%) scaleY(0.7); opacity: 0.35; }
+  45%  { transform: translateY(6%) scaleY(1.06); opacity: 1; }
+  100% { transform: translateY(0) scaleY(1); opacity: 1; }
+}
+
+/* Percikan kecil melayang dari tepi bawah saat hover di tema gelap. */
+.val-spark {
+  position: absolute;
+  bottom: 14%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--vx-spark-2);
+  box-shadow: 0 0 6px rgba(255, 138, 60, 0.9);
+}
+
+.val-spark { margin-left: calc(-40px + var(--i, 0) * 26px); }
+
+[data-theme="abyss"] .valo-surface:hover .val-spark {
+  animation: val-float 1.1s ease-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.18s);
+}
+
+@keyframes val-float {
+  0%   { opacity: 0; transform: translateY(0) scale(0.6); }
+  25%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-42px) scale(1.15); }
+}
+
+/* ── Permukaan VALO ──
+   .valo-surface disuntik valo-ui.js ke setiap kartu (cx/dash/mini/
+   file/tl/lf/rk/tm). Semua aturan kartu cukup menyasar satu kelas ini,
+   jadi tidak perlu daftar panjang dan tidak bentrok dengan gaya
+   masing-masing tool. Clip-path membuat overlay terpotong rapi. */
+.valo-surface {
+  position: relative;
+  clip-path: var(--val-cut);
+  border: 1px solid var(--val-edge-soft);
+  transition: transform 0.25s ease, box-shadow 0.25s ease,
+    border-color 0.25s ease, background 0.25s ease;
+}
+
+.valo-surface:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.28),
+    0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+[data-theme="abyss"] .valo-surface:hover {
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.5),
+    0 0 26px rgba(255, 138, 60, 0.28);
+}
+
+/* Garis aksen tepi atas, warna VALO. */
+.valo-surface > .valo-topline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    var(--accent),
+    color-mix(in srgb, var(--accent) 30%, transparent));
+}
+
+/* ── Tombol ── */
+.cx-btn,
+.vx-btn,
+.tl-btn,
+.lf-btn,
+.rk-btn,
+.tm-btn,
+.cx-chip-btn,
+.vx-chip {
+  position: relative;
+  overflow: hidden;
+  clip-path: var(--val-cut-sm);
+  transition: transform 0.18s ease, background 0.22s ease,
+    box-shadow 0.22s ease, color 0.22s ease, border-color 0.22s ease;
+}
+
+.cx-btn:hover,
+.vx-btn:hover,
+.tl-btn:hover,
+.lf-btn:hover,
+.rk-btn:hover,
+.tm-btn:hover,
+.cx-chip-btn:hover,
+.vx-chip:hover {
+  transform: translateY(-1px);
+}
+
+.cx-btn-primary:hover,
+.vx-btn-primary:hover {
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+[data-theme="abyss"] .cx-btn:hover::after,
+[data-theme="abyss"] .vx-btn:hover::after,
+[data-theme="abyss"] .tl-btn:hover::after,
+[data-theme="abyss"] .lf-btn:hover::after,
+[data-theme="abyss"] .rk-btn:hover::after,
+[data-theme="abyss"] .tm-btn:hover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 50% 130%,
+    rgba(255, 138, 60, 0.45) 0%,
+    rgba(255, 209, 102, 0.16) 40%,
+    rgba(255, 138, 60, 0) 72%);
+  animation: val-ember 0.4s ease-out;
+}
+
+[data-theme="abyss"] .cx-btn:active,
+[data-theme="abyss"] .vx-btn:active,
+[data-theme="abyss"] .tl-btn:active,
+[data-theme="abyss"] .lf-btn:active,
+[data-theme="abyss"] .rk-btn:active,
+[data-theme="abyss"] .tm-btn:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+/* Fokus keyboard tetap jelas di kedua tema. */
+.cx-btn:focus-visible,
+.vx-btn:focus-visible,
+.cx-chip-btn:focus-visible,
+.vx-chip:focus-visible,
+.cx-card:focus-visible,
+.cx-input:focus-visible,
+.cx-textarea:focus-visible,
+.cx-select:focus-visible,
+.cx-drop-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Input / select ── */
+.cx-input,
+.cx-textarea,
+.cx-select,
+.cx-drop-btn {
+  clip-path: var(--val-cut-sm);
+  border: 1px solid var(--val-edge-soft);
+  transition: border-color 0.22s ease, box-shadow 0.22s ease,
+    background 0.22s ease;
+}
+
+.cx-input:hover,
+.cx-textarea:hover,
+.cx-drop-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+[data-theme="abyss"] .cx-input:hover,
+[data-theme="abyss"] .cx-textarea:hover,
+[data-theme="abyss"] .cx-drop-btn:hover {
+  box-shadow: 0 0 18px rgba(255, 138, 60, 0.18);
+}
+
+.cx-input:focus,
+.cx-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* ── Tabel & baris ── */
+.cx-table tbody tr,
+.tm-row,
+.lf-row {
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.cx-table tbody tr:hover,
+.tm-row:hover,
+.lf-row:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+[data-theme="abyss"] .cx-table tbody tr:hover,
+[data-theme="abyss"] .tm-row:hover,
+[data-theme="abyss"] .lf-row:hover {
+  background: linear-gradient(90deg,
+    rgba(255, 138, 60, 0.14) 0%,
+    rgba(255, 209, 102, 0.05) 60%,
+    rgba(255, 138, 60, 0) 100%);
+}
+
+/* ── Kartu tema: pratinjau + state aktif ── */
+.cx-theme-grid {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.cx-theme-card {
+  position: relative;
+  overflow: hidden;
+  clip-path: var(--val-cut);
+  border: 1px solid var(--val-edge-soft);
+  transition: transform 0.22s ease, border-color 0.22s ease,
+    box-shadow 0.22s ease, background 0.22s ease;
+}
+
+.cx-theme-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.cx-theme-card[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--card-bg));
+  box-shadow: 0 0 0 1px var(--accent),
+    0 12px 30px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+[data-theme="abyss"] .cx-theme-card:hover {
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5),
+    0 0 22px rgba(255, 138, 60, 0.24);
+}
+
+.cx-theme-swatch {
+  position: relative;
+  height: 54px;
+  border: 1px solid var(--val-edge-soft);
+  overflow: hidden;
+}
+
+/* Kilat muncul di swatch tema gelap. */
+[data-theme="abyss"] .cx-theme-swatch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(115deg, transparent 46%, rgba(255, 255, 255, 0.5) 50%,
+      transparent 54%) no-repeat;
+  background-size: 240% 100%;
+  animation: val-bolt 4.2s ease-in-out infinite;
+}
+
+@keyframes val-bolt {
+  0%, 82%, 100% { background-position: 130% 0; opacity: 0; }
+  86%           { opacity: 1; }
+  92%           { background-position: -30% 0; opacity: 0.8; }
+  96%           { background-position: 130% 0; opacity: 0; }
+}
+
+/* Kaca bergerak di swatch tema terang. */
+[data-theme="lightholy"] .cx-theme-swatch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(112deg, transparent 40%,
+    rgba(255, 255, 255, 0.75) 50%, transparent 60%) no-repeat;
+  background-size: 220% 100%;
+  animation: val-glass 7s ease-in-out infinite;
+}
+
+@keyframes val-glass {
+  0%, 100% { background-position: 120% 0; }
+  50%      { background-position: -20% 0; }
+}
+
+.cx-theme-sub {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+/* ── Drawer / sidebar ── */
+.vx-drawer {
+  border-left: 1px solid var(--val-edge-soft);
+}
+
+.vx-drawer-item,
+.vx-nav-link,
+.vx-corner {
+  position: relative;
+  overflow: hidden;
+  clip-path: var(--val-cut-sm);
+  transition: background 0.2s ease, color 0.2s ease,
+    transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vx-drawer-item:hover,
+.vx-nav-link:hover {
+  transform: translateX(2px);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+[data-theme="abyss"] .vx-drawer-item:hover,
+[data-theme="abyss"] .vx-nav-link:hover {
+  background: linear-gradient(90deg,
+    rgba(255, 138, 60, 0.26) 0%,
+    rgba(255, 209, 102, 0.08) 55%,
+    rgba(255, 138, 60, 0) 100%);
+  box-shadow: inset 2px 0 0 #ff8a3c;
+}
+
+/* ── Toast & modal: api menyala di tema gelap ── */
+.vx-toast,
+.cx-toast {
+  clip-path: var(--val-cut);
+  border: 1px solid var(--val-edge-soft);
+}
+
+[data-theme="abyss"] .vx-toast:hover,
+[data-theme="abyss"] .cx-toast:hover {
+  box-shadow: 0 0 22px rgba(255, 138, 60, 0.3);
+}
+
+/* ── Scrollbar VALO ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 45%, transparent) transparent;
+}
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 42%, transparent);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 0;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+  background-clip: padding-box;
+}
+
+/* ── Hormati preferensi gerakReduced ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  [data-theme="abyss"] .val-shard:hover .val-spark { display: none; }
+}

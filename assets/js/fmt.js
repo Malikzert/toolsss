@@ -19,7 +19,7 @@
   };
 
   var DEFAULT_SETTINGS = {
-    appearance: 'system',
+    appearance: 'abyss',
     currency: 'IDR',
     customCurrencyCode: '',
     customCurrencySymbol: '',

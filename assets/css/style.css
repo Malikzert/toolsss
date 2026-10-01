@@ -1,6 +1,7 @@
 /* ══════════════════════════════════════════
-   COFDE — Theme System
-   3 themes: lightholy · darkside · abyss
+   COFDE — Theme System (VALO)
+   2 themes: lightholy (terang · pecahan kaca)
+             abyss     (gelap · kilat + hujan)
    ══════════════════════════════════════════ */
 
 :root,
@@ -26,30 +27,16 @@
   --vx-chip: rgba(22, 22, 28, 0.06);
   --vx-scrim: rgba(62, 54, 40, 0.32);
   --vx-on-accent: #ffffff;
-}
 
-[data-theme="darkside"] {
-  --bg: #0f1923;
-  --glow-a: rgba(60, 90, 130, 0.34);
-  --glow-b: rgba(255, 70, 85, 0.16);
-  --text: #ece8e1;
-  --text-sec: #a8b2bd;
-  --text-muted: #6b7885;
-  --card-bg: rgba(20, 32, 46, 0.52);
-  --card-border: rgba(236, 232, 225, 0.12);
-  --card-shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
-  --border: #2b3d4e;
---accent: #ff4655;
-  --ok: #2ee6a8;
-  --select-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23ece8e1' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-
-  --vx-bg: linear-gradient(158deg, rgba(15, 25, 35, 0.84), rgba(9, 16, 25, 0.62));
-  --vx-fg: #ece8e1;
-  --vx-dim: rgba(236, 232, 225, 0.48);
-  --vx-edge: rgba(236, 232, 225, 0.14);
-  --vx-chip: rgba(236, 232, 225, 0.07);
-  --vx-scrim: rgba(6, 12, 20, 0.5);
-  --vx-on-accent: #ffffff;
+  /* Tema terang: hover tetap pecahan kaca. */
+  --vx-peel-x: 0%;
+  --vx-peel-y: 100%;
+  --vx-peel-mid: 50% 50%;
+  --vx-hover-shadow: 0 14px 40px rgba(60, 48, 28, 0.16);
+  --vx-hover-glow: color-mix(in srgb, var(--accent) 30%, transparent);
+  --vx-spark-1: #ffd9a0;
+  --vx-spark-2: #ffc46b;
+  --vx-spark-3: #fff6e0;
 }
 
 [data-theme="abyss"] {
@@ -74,6 +61,20 @@
   --vx-chip: rgba(120, 214, 230, 0.07);
   --vx-scrim: rgba(1, 5, 11, 0.55);
   --vx-on-accent: #04202b;
+
+  /* ── VALO: koordinat peel (kaca / api / kilat / hujan) ──
+     Keyframes tidak bisa membaca var(), jadi semua efek berikut ditulis
+     ditulis dua kali: blok lightholy memakai bentuk
+     pecahan kaca, blok abyss memakai api + kilat + hujan. Nilai var()
+     dipakai hanya untuk hal yang boleh di-token (gradient statis). */
+  --vx-peel-x: 0%;
+  --vx-peel-y: 100%;
+  --vx-peel-mid: 50% 50%;
+  --vx-hover-shadow: 0 14px 40px rgba(60, 48, 28, 0.16);
+  --vx-hover-glow: color-mix(in srgb, var(--accent) 34%, transparent);
+  --vx-spark-1: #ff8a3c;
+  --vx-spark-2: #ffd166;
+  --vx-spark-3: #fff2c4;
 }
 
 /* ── Reset & Typography ── */
@@ -784,7 +785,7 @@ h1 {
   text-transform: uppercase;
 }
 
-/* ── Refresh paksa: gasing berputar + percikan api ── */
+/* ── Refresh paksa: gasing + api pelangi çok çok cepat ── */
 .vx-refresh {
   position: fixed;
   top: 1rem;
@@ -813,63 +814,117 @@ h1 {
   transform: translateY(-1px);
 }
 
-/* Cincin panah refresh, diam sampai hover. */
-.vx-refresh-ring {
+/* Api pelangi: tiga lapis conic, sangat cepat, hanya saat hover. */
+.vx-flame {
   position: absolute;
-  inset: 0.55rem;
-  border: 2px solid transparent;
-  border-top-color: var(--accent);
-  border-right-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  inset: -35%;
   border-radius: 50%;
-  transition: transform 0.4s ease;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    conic-gradient(from 0deg,
+      #ff2d55, #ff8a3c, #ffd166, #2ee6a8, #2ee6d6,
+      #5aa9ff, #a06bff, #ff2d55);
+  filter: blur(7px);
+  transition: opacity 0.16s ease;
 }
 
-.vx-refresh:hover .vx-refresh-ring {
-  transform: rotate(120deg);
+.vx-refresh:hover .vx-flame,
+.vx-refresh.spinning .vx-flame {
+  opacity: 0.85;
+  animation: vx-flame-spin 0.18s linear infinite;
 }
 
-/* Gasing (spinning top) tampil saat memuat paksa. */
-.vx-top {
+/* Lidah api di atas gasing. */
+.vx-flame-tip {
   position: absolute;
-  inset: 0.4rem;
-  display: none;
-}
-
-.vx-refresh.spinning .vx-top { display: block; animation: vx-gasing 0.9s linear infinite; }
-.vx-refresh.spinning .vx-refresh-ring { animation: vx-ring 0.9s linear infinite; }
-
-.vx-top i {
-  position: absolute;
-  inset: 0.4rem 0 0;
-  background: conic-gradient(from 0deg, var(--accent), #ffc46b, var(--accent));
-  clip-path: polygon(50% 0, 100% 72%, 50% 100%, 0 72%);
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 70%, transparent));
-}
-
-.vx-top b {
-  position: absolute;
+  top: 0.22rem;
   left: 50%;
-  top: 0;
-  width: 2px;
-  height: 0.45rem;
-  background: var(--vx-fg);
-  transform: translateX(-50%);
+  width: 0.85rem;
+  height: 0.5rem;
+  margin-left: -0.425rem;
+  opacity: 0;
+  pointer-events: none;
+  background: conic-gradient(from 90deg, #ffd166, #ff8a3c, #ff2d55, #ffd166);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  filter: drop-shadow(0 0 5px rgba(255, 138, 60, 0.9));
+  transition: opacity 0.16s ease;
+}
+
+.vx-refresh:hover .vx-flame-tip,
+.vx-refresh.spinning .vx-flame-tip {
+  opacity: 1;
+  animation: vx-flame-jit 0.12s steps(2, end) infinite;
+}
+
+/* Gasing (jerry can) di tengah tombol. */
+.vx-can {
+  position: relative;
+  width: 0.95rem;
+  height: 0.8rem;
+  flex: 0 0 auto;
+  color: var(--vx-fg);
+  transition: transform 0.3s ease, color 0.2s ease;
+}
+
+.vx-refresh:hover .vx-can { transform: translateY(-0.08rem) scale(1.06); }
+.vx-refresh.spinning .vx-can { animation: vx-gasing 0.55s cubic-bezier(0.5, 0, 0.5, 1) infinite; }
+
+.vx-can i {
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  clip-path: polygon(14% 18%, 86% 18%, 100% 34%, 100% 100%, 0 100%, 0 34%);
+  opacity: 0.9;
+}
+
+.vx-can b {
+  position: absolute;
+  top: -0.22rem;
+  right: -0.02rem;
+  width: 0.42rem;
+  height: 0.3rem;
+  background: currentColor;
+  clip-path: polygon(0 100%, 40% 0, 100% 0, 100% 100%);
+  opacity: 0.75;
+}
+
+.vx-can s {
+  position: absolute;
+  inset: 0.34rem 0.22rem auto 0.22rem;
+  height: 2px;
+  background: var(--vx-bg);
+  opacity: 0.55;
+  text-decoration: none;
+}
+
+@keyframes vx-flame-spin {
+  from { transform: rotate(0deg) scale(1.15); }
+  to   { transform: rotate(360deg) scale(1.15); }
+}
+
+@keyframes vx-flame-jit {
+  0%   { transform: translateX(-0.07rem) scaleY(0.86); }
+  50%  { transform: translateX(0.07rem) scaleY(1.14); }
+  100% { transform: translateX(-0.04rem) scaleY(0.94); }
 }
 
 @keyframes vx-gasing {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes vx-ring {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  0%   { transform: rotate(0deg); }
+  50%  { transform: rotate(160deg); }
+  100% { transform: rotate(360deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vx-refresh.spinning .vx-top,
-  .vx-refresh.spinning .vx-refresh-ring,
-  .vx-refresh:hover .vx-refresh-ring { animation: none; }
+  .vx-refresh.spinning .vx-can,
+  .vx-refresh:hover .vx-flame,
+  .vx-refresh.spinning .vx-flame,
+  .vx-refresh:hover .vx-flame-tip,
+  .vx-refresh.spinning .vx-flame-tip { animation: none; }
+  .vx-refresh:hover .vx-flame,
+  .vx-refresh.spinning .vx-flame { opacity: 0.6; }
+  .vx-refresh:hover .vx-flame-tip,
+  .vx-refresh.spinning .vx-flame-tip { opacity: 1; }
 }
 
 /* ── Blink: light sweep on open ── */

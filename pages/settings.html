@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Settings &mdash; COFDE Toolkit</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/valo.css">
   <link rel="manifest" href="../pwa/manifest.webmanifest">
   <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
   <meta name="theme-color" content="#ff4655">
@@ -26,10 +27,8 @@
     <label class="cx-field">
       <span class="cx-label">Tema</span>
       <select id="appearance" class="cx-select">
-        <option value="lightholy">Lightholy</option>
-        <option value="darkside">Darkside</option>
-        <option value="abyss">Abyss</option>
-        <option value="system">System (ikuti perangkat)</option>
+        <option value="lightholy">Lightholy &mdash; terang (pecahan kaca)</option>
+        <option value="abyss">Abyss &mdash; gelap (kilat &amp; hujan)</option>
       </select>
     </label>
     <div class="cx-label" style="margin-top:0.9rem">Pratinjau tema</div>
@@ -37,17 +36,15 @@
       <button type="button" class="cx-theme-card" data-theme="lightholy" aria-pressed="false">
         <span class="cx-theme-swatch" style="background:linear-gradient(90deg,#fff6e2,#ffc46b)"></span>
         <span class="cx-theme-name">Lightholy</span>
-      </button>
-      <button type="button" class="cx-theme-card" data-theme="darkside" aria-pressed="false">
-        <span class="cx-theme-swatch" style="background:linear-gradient(90deg,#0f1923,#ff4655)"></span>
-        <span class="cx-theme-name">Darkside</span>
+        <span class="cx-theme-sub">Terang &middot; pecahan kaca</span>
       </button>
       <button type="button" class="cx-theme-card" data-theme="abyss" aria-pressed="false">
         <span class="cx-theme-swatch" style="background:linear-gradient(90deg,#04070f,#2ee6d6)"></span>
         <span class="cx-theme-name">Abyss</span>
+        <span class="cx-theme-sub">Gelap &middot; kilat &amp; hujan</span>
       </button>
     </div>
-    <p class="cx-note">Ini satu-satunya tempat mengubah tema. Dropdown dan kartu di atas saling menyesuaikan, lalu berlaku di semua fitur.</p>
+    <p class="cx-note">Hanya dua mode: <strong>Lightholy</strong> (terang, pecahan kaca) dan <strong>Abyss</strong> (gelap, kilat &amp; hujan). Dropdown dan kartu di atas saling menyesuaikan, lalu berlaku di semua fitur.</p>
   </section>
 
   <section class="cx-card">
@@ -119,6 +116,15 @@
     <button class="cx-btn" id="showShortcuts">Buka daftar pintasan</button>
   </section>
 
+  <section class="cx-card">
+    <h2 class="cx-card-title">Gerbang masuk</h2>
+    <p class="cx-sub" style="margin-bottom:0.7rem">Percakapan client/server hanya muncul sekali per browser. Tampilkan lagi untuk mencoba ulang.</p>
+    <div class="cx-actions">
+      <button class="cx-btn" id="showGate">Tampilkan gerbang lagi</button>
+      <button class="cx-btn cx-btn-danger" id="resetGate">Mulai ulang gerbang</button>
+    </div>
+  </section>
+
 </div>
 
 <script src="../assets/js/toast.js"></script>
@@ -129,7 +135,10 @@
 <script src="../assets/js/net.js"></script>
 <script src="../assets/js/cmdpal.js"></script>
 <script src="../assets/js/particles.js"></script>
+<script src="../assets/js/valo-sky.js"></script>
 <script src="../assets/js/drawer.js"></script>
+<script src="../assets/js/valo-gate.js"></script>
+  <script src="../assets/js/valo-ui.js"></script>
 <script src="../assets/js/dropdown.js"></script>
 <script src="../assets/js/shortcuts.js"></script>
 <script src="../assets/js/sw-register.js"></script>
@@ -167,13 +176,10 @@
 
   function paint() {
     var s = COFDE.settings.get();
-    /* Radio/select tema memakai nama tema yang sama dengan chip sidebar;
-     nilai lama 'light'/'dark' dipetakan supaya tidak pernah blank. */
-    var ap = s.appearance;
-    if (ap === 'light') ap = 'lightholy';
-    else if (ap === 'dark') ap = 'darkside';
-    if (['lightholy', 'darkside', 'abyss', 'system'].indexOf(ap) < 0) ap = 'system';
-    appearance.value = ap;
+    /* Hanya dua mode tema yang sah: lightholy (terang) dan abyss (gelap).
+       Apa pun yang tersimpan sebelumnya dipetakan ke salah satu, jadi
+       dropdown tidak pernah kosong atau menyodorkan nilai tak dikenal. */
+    appearance.value = s.appearance === 'lightholy' ? 'lightholy' : 'abyss';
     paintThemeCards(COFDE.settings.resolvedTheme());
     currency.value = s.currency;
     curCode.value = s.customCurrencyCode || '';
@@ -319,6 +325,15 @@
 
   $('showShortcuts').addEventListener('click', function () {
     if (window.COFDE_SHORTCUT_HELP) COFDE_SHORTCUT_HELP();
+  });
+
+  /* Gerbang masuk: tampilkan ulang / mulai dari nol. */
+  $('showGate').addEventListener('click', function () {
+    if (window.COFDE_GATE) COFDE_GATE.show(true);
+  });
+  $('resetGate').addEventListener('click', function () {
+    if (window.COFDE_GATE) COFDE_GATE.reset();
+    if (window.COFDE.toast) COFDE.toast.info('Gerbang masuk akan muncul lagi saat halaman dibuka ulang.');
   });
 
   /* Ikuti perubahan tema dari halaman lain (mis. lewat import settings). */
