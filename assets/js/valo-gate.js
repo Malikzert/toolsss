@@ -24,6 +24,9 @@
 
   var KEY = 'cofde_gate';
   var CODE = 'cofde';
+  /* Penanda versi gerbang: naikkan nilai ini supaya pengunjung lama
+     sekali lagi melihat gerbang baru, lalu tersimpan lagi. */
+  var DONE = 'ok:v2';
 
   /* Tiga jawaban; server merespons berbeda untuk tiap pilihan. */
   var CHOICES = [
@@ -50,14 +53,14 @@
   /* ── Status ── */
   function isDone() {
     try {
-      return localStorage.getItem(KEY) === 'ok';
+      return localStorage.getItem(KEY) === DONE;
     } catch (e) {
       return false;
     }
   }
 
   function markDone() {
-    try { localStorage.setItem(KEY, 'ok'); } catch (e) { /* abaikan */ }
+    try { localStorage.setItem(KEY, DONE); } catch (e) { /* abaikan */ }
   }
 
   function reset() {
