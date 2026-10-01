@@ -29,16 +29,6 @@
 
   var ctx = canvas.getContext('2d');
 
-  /* Lapisan obor: di atas konten supaya ekor api kursor terlihat jelas. */
-  var torchCanvas = document.createElement('canvas');
-  torchCanvas.className = 'valo-torch';
-  torchCanvas.setAttribute('aria-hidden', 'true');
-  torchCanvas.style.cssText =
-    'position:fixed;inset:0;width:100vw;height:100vh;z-index:5;' +
-    'pointer-events:none;display:none;';
-  document.body.appendChild(torchCanvas);
-  var tctx = torchCanvas.getContext('2d');
-
   var W = 0;
   var H = 0;
   var dpr = 1;
@@ -46,12 +36,6 @@
   var drops = [];
   var ripples = [];
   var bolts = [];
-
-  /* Obor kursor: kobaran api + ekor yang mengikuti gerak. */
-  var EMBER_COLORS = ['#ffe3b3', '#ffd166', '#ff8a3c', '#ff5a3c', '#ff4655'];
-  var embers = [];
-  var MAX_EMBERS = 170;
-  var torch = { x: 0, y: 0, px: 0, py: 0, has: false, active: false };
 
   /* Hujan deras: banyak tetes, jatuh cepat, arah miring. */
   var DROP_COUNT = 460;
@@ -85,9 +69,6 @@
     canvas.width = Math.max(1, Math.round(W * dpr));
     canvas.height = Math.max(1, Math.round(H * dpr));
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    torchCanvas.width = Math.max(1, Math.round(W * dpr));
-    torchCanvas.height = Math.max(1, Math.round(H * dpr));
-    tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     seedDrops();
   }
 
@@ -235,102 +216,6 @@
     ctx.restore();
   }
 
-  /* ── Obor kursor ── */
-  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
-
-  function spawnEmber(x, y, dx, dy) {
-    var ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.8;
-    var sp = 0.5 + Math.random() * 1.7;
-    return {
-      x: x + (Math.random() - 0.5) * 8,
-      y: y + (Math.random() - 0.5) * 8,
-      vx: Math.cos(ang) * sp + dx * 0.08,
-      vy: Math.sin(ang) * sp + dy * 0.08,
-      r: 1.6 + Math.random() * 3.6,
-      life: 1,
-      decay: 0.02 + Math.random() * 0.03,
-      tint: pick(EMBER_COLORS)
-    };
-  }
-
-  function trail(x, y) {
-    if (torch.has) {
-      var dx = x - torch.px;
-      var dy = y - torch.py;
-      var dist = Math.sqrt(dx * dx + dy * dy);
-      var steps = Math.min(9, Math.max(1, Math.round(dist / 7)));
-      for (var i = 1; i <= steps; i++) {
-        var t = i / steps;
-        embers.push(spawnEmber(torch.px + dx * t, torch.py + dy * t, dx, dy));
-      }
-    } else {
-      embers.push(spawnEmber(x, y, 0, 0));
-    }
-    torch.px = x;
-    torch.py = y;
-    torch.has = true;
-    if (embers.length > MAX_EMBERS) embers.splice(0, embers.length - MAX_EMBERS);
-  }
-
-  function onPointerMove(e) {
-    if (reduceMotion || !active) return;
-    torch.active = true;
-    torch.x = e.clientX;
-    torch.y = e.clientY;
-    trail(e.clientX, e.clientY);
-  }
-
-  function onPointerGone() {
-    torch.active = false;
-    torch.has = false;
-  }
-
-  function drawTorch() {
-    tctx.clearRect(0, 0, W, H);
-    if (!active) return;
-
-    tctx.save();
-    tctx.globalCompositeOperation = 'lighter';
-
-    /* Ekor api: titik-titik api yang naik lalu memudar. */
-    for (var i = embers.length - 1; i >= 0; i--) {
-      var em = embers[i];
-      em.vy -= 0.014;
-      em.vx *= 0.972;
-      em.x += em.vx;
-      em.y += em.vy;
-      em.r *= 0.986;
-      em.life -= em.decay;
-      if (em.life <= 0) { embers.splice(i, 1); continue; }
-      var R = Math.max(0.5, em.r * 3.4);
-      var g = tctx.createRadialGradient(em.x, em.y, 0, em.x, em.y, R);
-      g.addColorStop(0, 'rgba(255, 246, 214, ' + (0.85 * em.life).toFixed(3) + ')');
-      g.addColorStop(0.35, 'rgba(255, 180, 90, ' + (0.5 * em.life).toFixed(3) + ')');
-      g.addColorStop(0.72, 'rgba(255, 86, 52, ' + (0.2 * em.life).toFixed(3) + ')');
-      g.addColorStop(1, 'rgba(255, 60, 60, 0)');
-      tctx.fillStyle = g;
-      tctx.beginPath();
-      tctx.arc(em.x, em.y, R, 0, Math.PI * 2);
-      tctx.fill();
-    }
-
-    /* Kepala obor: lidah api yang berkedip di ujung kursor. */
-    if (torch.active) {
-      var f = 0.9 + Math.sin(performance.now() * 0.02) * 0.1 + Math.random() * 0.08;
-      var R2 = 24 * f;
-      var g2 = tctx.createRadialGradient(torch.x, torch.y, 0, torch.x, torch.y, R2);
-      g2.addColorStop(0, 'rgba(255, 252, 235, 0.95)');
-      g2.addColorStop(0.3, 'rgba(255, 206, 120, 0.72)');
-      g2.addColorStop(0.62, 'rgba(255, 116, 52, 0.32)');
-      g2.addColorStop(1, 'rgba(255, 60, 60, 0)');
-      tctx.fillStyle = g2;
-      tctx.beginPath();
-      tctx.ellipse(torch.x, torch.y, R2 * 0.82, R2 * 1.22, 0, 0, Math.PI * 2);
-      tctx.fill();
-    }
-    tctx.restore();
-  }
-
   function frame(ts) {
     if (!running) return;
     var dt = lastFrame ? Math.min((ts - lastFrame) / 1000, 0.05) : 0.016;
@@ -344,7 +229,6 @@
     drawRipples();
     drawBolts();
     drawFlash();
-    drawTorch();
 
     /* Sesekali tetes mengenai "lantai" dan menghasilkan riak. */
     if (!reduceMotion && Math.random() < 0.35) {
@@ -365,7 +249,6 @@
     lastFrame = 0;
     nextBoltAt = performance.now() + rand(BOLT_MIN_GAP, BOLT_MAX_GAP);
     canvas.style.display = 'block';
-    torchCanvas.style.display = 'block';
     document.documentElement.classList.add('valo-dark-sky');
     rafId = requestAnimationFrame(frame);
   }
@@ -376,12 +259,7 @@
     if (rafId) cancelAnimationFrame(rafId);
     rafId = 0;
     ctx.clearRect(0, 0, W, H);
-    tctx.clearRect(0, 0, W, H);
-    embers.length = 0;
-    torch.active = false;
-    torch.has = false;
     canvas.style.display = 'none';
-    torchCanvas.style.display = 'none';
     document.documentElement.classList.remove('valo-dark-sky');
   }
 
@@ -395,11 +273,6 @@
   window.addEventListener('resize', function () {
     if (active) resize();
   });
-
-  /* Obor kursor (tema gelap). */
-  window.addEventListener('pointermove', onPointerMove, { passive: true });
-  window.addEventListener('pointerout', onPointerGone);
-  window.addEventListener('blur', onPointerGone);
 
   /* Ikuti pergantian tema dari settings.js / particles.js. */
   if (window.COFDE && window.COFDE.settings && window.COFDE.settings.onChange) {

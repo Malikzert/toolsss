@@ -53,9 +53,12 @@
   var shards = [];
   var motes = [];
   var flecks = [];
+  var embers = [];
   var MAX_SHARDS = 80;
   var MAX_MOTES = 9;
   var MAX_FLECKS = 44;
+  var MAX_EMBERS = 170;
+  var torch = { x: 0, y: 0, px: 0, py: 0, has: false, on: false };
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ── Resize ── */
@@ -123,12 +126,19 @@
 
   function trackPointer(e) {
     if (reduceMotion) return;
-    if (!glassOn()) return;
-    if (flecks.length >= MAX_FLECKS) return;
 
     var x = e.clientX;
     var y = e.clientY;
     if (x < -20 || y < -20 || x > W + 20 || y > H + 20) return;
+
+    /* Tema gelap: obor api (kobaran di kursor + ekor ember). */
+    if (!glassOn()) {
+      torchTrail(x, y);
+      return;
+    }
+
+    /* Tema terang: serpihan kaca yang tertinggal dari kursor. */
+    if (flecks.length >= MAX_FLECKS) return;
 
     flecks.push(spawnFleck(x, y));
 
@@ -250,6 +260,79 @@
     }
   }
 
+  /* ── Obor kursor (tema gelap): kobaran api + ekor ember ── */
+  function spawnEmber(x, y, dx, dy) {
+    var ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.9;
+    var sp = 0.5 + Math.random() * 1.8;
+    return {
+      x: x + (Math.random() - 0.5) * 8,
+      y: y + (Math.random() - 0.5) * 8,
+      vx: Math.cos(ang) * sp + dx * 0.08,
+      vy: Math.sin(ang) * sp + dy * 0.08,
+      r: 1.6 + Math.random() * 3.4,
+      life: 1,
+      decay: 0.02 + Math.random() * 0.03,
+      tint: pick(EMBER)
+    };
+  }
+
+  function torchTrail(x, y) {
+    if (torch.has) {
+      var dx = x - torch.px;
+      var dy = y - torch.py;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var steps = Math.min(9, Math.max(1, Math.round(dist / 7)));
+      for (var i = 1; i <= steps; i++) {
+        var t = i / steps;
+        embers.push(spawnEmber(torch.px + dx * t, torch.py + dy * t, dx, dy));
+      }
+    } else {
+      embers.push(spawnEmber(x, y, 0, 0));
+    }
+    if (embers.length > MAX_EMBERS) embers.splice(0, embers.length - MAX_EMBERS);
+    torch.px = x;
+    torch.py = y;
+    torch.has = true;
+    torch.on = true;
+  }
+
+  function drawEmbers() {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+
+    /* Ekor api: ember yang naik lalu memudar. */
+    for (var i = 0; i < embers.length; i++) {
+      var em = embers[i];
+      if (em.life <= 0.01) continue;
+      var R = Math.max(0.5, em.r * 3.4);
+      var g = ctx.createRadialGradient(em.x, em.y, 0, em.x, em.y, R);
+      g.addColorStop(0, 'rgba(255,246,214,' + (0.85 * em.life).toFixed(3) + ')');
+      g.addColorStop(0.35, 'rgba(255,180,90,' + (0.5 * em.life).toFixed(3) + ')');
+      g.addColorStop(0.72, 'rgba(255,86,52,' + (0.2 * em.life).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(255,60,60,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(em.x, em.y, R, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    /* Kobaran api di ujung kursor. */
+    if (torch.on) {
+      var f = 0.9 + Math.sin(performance.now() * 0.02) * 0.1;
+      var Rh = 22 * f;
+      var gh = ctx.createRadialGradient(torch.x, torch.y, 0, torch.x, torch.y, Rh);
+      gh.addColorStop(0, 'rgba(255,252,235,0.92)');
+      gh.addColorStop(0.32, 'rgba(255,206,120,0.66)');
+      gh.addColorStop(0.64, 'rgba(255,116,52,0.28)');
+      gh.addColorStop(1, 'rgba(255,60,60,0)');
+      ctx.fillStyle = gh;
+      ctx.beginPath();
+      ctx.arc(torch.x, torch.y, Rh, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   /* ── Animation Loop ── */
   function loop() {
     ctx.clearRect(0, 0, W, H);
@@ -291,6 +374,17 @@
       flecks.length = 0;
     }
 
+    for (var eI = embers.length - 1; eI >= 0; eI--) {
+      var em = embers[eI];
+      em.vy -= 0.012;          /* api selalu naik */
+      em.vx *= 0.975;
+      em.x += em.vx;
+      em.y += em.vy;
+      em.r *= 0.986;
+      em.life -= em.decay;
+      if (em.life <= 0) embers.splice(eI, 1);
+    }
+
     for (var s2 = sparks.length - 1; s2 >= 0; s2--) {
       var sp = sparks[s2];
       sp.vy += sp.gravity;
@@ -306,6 +400,8 @@
       drawMotes();
       drawShards();
       drawFlecks();
+    } else {
+      drawEmbers();
     }
     drawSparks();
 
@@ -322,6 +418,9 @@
     shards.length = 0;
     motes.length = 0;
     flecks.length = 0;
+    embers.length = 0;
+    torch.has = false;
+    torch.on = false;
   }
 
   function setTheme(theme) {
@@ -334,6 +433,16 @@
   resize();
   window.addEventListener('resize', resize);
   window.addEventListener('pointermove', trackPointer, { passive: true });
+
+  /* Putuskan ekor obor saat kursor keluar jendela. */
+  document.addEventListener('mouseleave', function () {
+    torch.has = false;
+    torch.on = false;
+  });
+  window.addEventListener('blur', function () {
+    torch.has = false;
+    torch.on = false;
+  });
   document.documentElement.setAttribute('data-theme', currentTheme);
   loop();
 
