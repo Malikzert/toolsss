@@ -1,13 +1,10 @@
 (function () {
   'use strict';
 
-  var $ = function (id) { return document.getElementById(id); };
+  function initScan() {
+    var $ = function (id) { return document.getElementById(id); };
+    if (!$('scCanvas') || !$('scOut')) return; // tidak ada UI scan di halaman ini
 
-  var stage = $('scStage');
-  var cvs = $('scCanvas');
-  var ctx = cvs.getContext('2d', { willReadFrequently: true });
-  var outCvs = $('scOut');
-  var outCtx = outCvs.getContext('2d');
 
   var fileIn = $('scFile');
   var btnOpen = $('scOpen');
@@ -374,4 +371,10 @@
   rArea.oninput=function(){ vArea.textContent=parseFloat(rArea.value).toFixed(2); };
 
   drawEditor();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initScan);
+  } else {
+    initScan();
+  }
 })();
