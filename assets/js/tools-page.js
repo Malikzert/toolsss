@@ -6,9 +6,9 @@
 (function () {
   'use strict';
 
-  var TOOLS = ['crop', 'gabung', 'konversi', 'devtools'];
-  var cards = Array.prototype.slice.call(document.querySelectorAll('.tl-card'));
-  var panels = TOOLS.map(function (k) { return document.getElementById('panel-' + k); });
+    var TOOLS = ['crop', 'gabung', 'konversi', 'devtools', 'scan'];
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.tl-card'));
+    var panels = TOOLS.map(function (k) { return document.getElementById('panel-' + k); });
   var current = null;
 
   function show(key, focusPanel) {
