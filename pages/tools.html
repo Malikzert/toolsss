@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../assets/css/tools-crop.css">
   <link rel="stylesheet" href="../assets/css/tools-gabung.css">
   <link rel="stylesheet" href="../assets/css/tools-konversi.css">
+  <link rel="stylesheet" href="../assets/css/tools-scan.css">
   <link rel="stylesheet" href="../assets/css/valo.css">
   <link rel="manifest" href="../pwa/manifest.webmanifest">
   <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
@@ -57,6 +58,12 @@
       <span class="tl-card-num">05</span>
       <span class="tl-card-name">Dev Tools</span>
       <span class="tl-card-desc">JSON, Base64, JWT, regex, dan lainnya.</span>
+    </button>
+    <button class="tl-card" role="tab" type="button" data-tool="scan"
+            id="tab-scan" aria-controls="panel-scan" aria-selected="false" tabindex="-1">
+      <span class="tl-card-num">06</span>
+      <span class="tl-card-name">Scan Dokumen</span>
+      <span class="tl-card-desc">Auto-deteksi tepi + perspektif ala CamScanner.</span>
     </button>
   </div>
 
@@ -603,6 +610,7 @@
 <script src="../assets/js/shortcuts.js"></script>
 <script src="../assets/js/sw-register.js"></script>
 <script src="../assets/js/devtools-page.js"></script>
-<script src="../assets/js/tools-page.js"></script>
-</body>
-</html>
+  <script src="../assets/js/tools-page.js"></script>
+  <script src="../assets/js/scan-page.js"></script>
+  </body>
+  </html>
