@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan Dokumen &mdash; COFDE Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/tools.css">
+  <link rel="stylesheet" href="../assets/css/tools-scan.css">
+  <link rel="stylesheet" href="../assets/css/valo.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
+</head>
+<body>
+<div class="cx-page">
+  <header class="cx-head">
+    <div>
+      <h1 class="cx-title">Scan Dokumen</h1>
+      <p class="cx-sub">Auto-deteksi tepi, koreksi perspektif, jadikan tampak seperti hasil scan CamScanner.</p>
+    </div>
+    <a class="sc-btn ghost" href="dashboard.html">← Kembali Dashboard</a>
+  </header>
+
+  <main class="tl-panel tl-panel-scan" style="margin-top:10px">
+    <div class="sc-wrap">
+      <div class="sc-left">
+        <div class="sc-card h">
+          <div class="sc-toolbar">
+            <button class="sc-btn primary" id="scOpen">Pilih Foto</button>
+            <input type="file" class="sc-file" id="scFile" accept="image/*">
+            <button class="sc-btn ghost" id="scAuto" disabled>Auto-detect Ulang</button>
+            <button class="sc-btn ghost" id="scReset" disabled>Reset Titik</button>
+            <button class="sc-btn ghost" id="scToggleEdit" disabled>Mode Edit Sudut</button>
+          </div>
+          <div class="sc-note">Ambil foto dokumen miring, bisa langsung auto-crop. Geser lingkaran hijau buat koreksi manual.</div>
+        </div>
+
+        <div class="sc-card">
+          <div class="sc-card h" style="padding:0;border:none;background:transparent;box-shadow:none">
+            <h3 style="margin:0">Pratinjau Edit</h3>
+            <span class="sc-small" id="scStatus">Belum ada gambar</span>
+          </div>
+          <div class="sc-stage" id="scStage">
+            <canvas id="scCanvas" width="960" height="640" aria-label="Editor scan dokumen"></canvas>
+            <div class="sc-hint" id="scHint">Klik &amp; geser titik sudut (hijau) lalu tekan "Terapkan Warp"</div>
+          </div>
+          <div class="sc-grid">
+            <div class="sc-range">
+              <label>Gaussian <span id="vBlur">2.0</span></label>
+              <input type="range" id="rBlur" min="1" max="4" step="0.5" value="2.0">
+            </div>
+            <div class="sc-range">
+              <label>Canny Low <span id="vC1">40</span></label>
+              <input type="range" id="rC1" min="10" max="120" step="1" value="40">
+            </div>
+            <div class="sc-range">
+              <label>Canny High <span id="vC2">100</span></label>
+              <input type="range" id="rC2" min="20" max="200" step="1" value="100">
+            </div>
+            <div class="sc-range">
+              <label>Min Area <span id="vArea">0.12</span></label>
+              <input type="range" id="rArea" min="0.05" max="0.4" step="0.01" value="0.12">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sc-right">
+        <div class="sc-card">
+          <div class="sc-card h" style="padding:0;border:none;background:transparent;box-shadow:none">
+            <h3 style="margin:0">Hasil Scan</h3>
+            <div class="sc-toolbar">
+              <span class="sc-chip active" data-filter="none" id="fNone">Original Warp</span>
+              <span class="sc-chip" data-filter="gray">Grayscale</span>
+              <span class="sc-chip" data-filter="bw">B&W (Print)</span>
+              <span class="sc-chip" data-filter="enh">Enhanced</span>
+            </div>
+          </div>
+          <div class="sc-canvasbox">
+            <canvas id="scOut" class="sc-preview" width="800" height="600" aria-label="Hasil scan dokumen"></canvas>
+            <button class="sc-btn primary" id="scDownload" disabled>Unduh JPG</button>
+            <button class="sc-btn ghost" id="scApplyWarp" disabled>Terapkan Warp ke Hasil</button>
+            <div class="sc-small">Mode Edit Sudut: geser 4 lingkaran hijau, lalu "Terapkan Warp ke Hasil".</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/scan-page.js"></script>
+</body>
+</html>
