@@ -9,6 +9,7 @@
     { href: 'dashboard.html', label: 'Dashboard' },
     { href: 'reader.html',    label: 'Dokumen Reader' },
     { href: 'tools.html',     label: 'Studio Tools' },
+    { href: 'scan.html',      label: 'Scan Dokumen' },
     { href: 'listdiff.html',  label: 'List Diff' },
     { href: 'timer.html',     label: 'Timer' },
     { href: 'random.html',    label: 'Random Picker' },
