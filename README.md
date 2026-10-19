@@ -74,12 +74,12 @@ Ringkasan seluruh fitur dalam satu tampilan.
 
 | Bagian | Isi |
 |---|---|
-| **Speedometer** | Gauge "Optimal Load" dengan jarum beranimasi, sudut 270 derajat |
-| **Total Operations** | Counter operasi sesi, tersimpan di localStorage |
-| **Available Tools** | Mini-card untuk Reader, Potong, Gabung, Konversi, Gabung PDF, Pisah PDF, dan 4 tool baru |
-| **Resource Usage** | Bar Memory, Canvas, dan IO, ditambah estimasi FPS |
+| **Speedometer** | Gauge "Render Efficiency": FPS terukur dari `requestAnimationFrame` dibanding refresh rate layar yang dievaluasi sendiri |
+| **Total Operations** | Counter operasi sesi (localStorage), bar "Sesi ini vs Total", plus storage terpakai dari `navigator.storage.estimate()` |
+| **Tarot Harian** | Deck 78 kartu (22 Major + 56 Minor), 5 kartu per hari, dikocok dari seed tanggal, warna kartu mengikuti jenisnya |
+| **Resource Usage** | FPS per detik, frame pacing, JS Heap dari `performance.memory`, dan long task dari `PerformanceObserver` |
 
-Semua angka pada Dashboard bersifat **simulasi visual** untuk memberi kesan hidup, bukan telemetry sungguhan. Yang benar-benar disimulasikan hanya `Total Operations`, yang naik setiap kamu menekan tool.
+Semua angka pada Dashboard **diukur langsung dari browser**, bukan animasi karangan. Yang tidak bisa diukur browser (misalnya pemakaian CPU/GPU per proses) tidak ditampilkan. `Total Operations` tetap satu-satunya data yang disimpan antar-sesi. Metrik yang tidak didukung peramban (misalnya `performance.memory` di luar Chrome) tampil sebagai `—`.
 
 ---
 
@@ -507,7 +507,7 @@ Buka `http://localhost:3000`
 
 - Sepenuhnya client-side. **Tidak ada file yang diunggah ke server mana pun**, karena repo ini tidak memiliki backend.
 - Tidak ada analytics, tidak ada tracking, tidak ada cookie.
-- Penyimpanan lokal hanya berisi `fire-theme` (tema), `cofde_ops` (counter dashboard), preferensi Ringkas/Budget di localStorage, dan basis data IndexedDB `cofde_expense` untuk riwayat pengeluaran.
+- Penyimpanan lokal hanya berisi `fire-theme` (tema), `cofde_ops` (counter dashboard), `cofde_tarot_v1` (kartu tarot yang sudah dibuka hari ini), preferensi Ringkas/Budget di localStorage, dan basis data IndexedDB `cofde_expense` untuk riwayat pengeluaran.
 - Satu-satunya request keluar adalah pemuatan library dari CDN publik, dan pencarian/geocoding Maps yang dikirim ke Nominatim (OpenStreetMap) saat kamu menekan tombol Cari.
 - Isi dokumen hanya ada di memori tab dan hilang saat tab ditutup atau di-refresh.
 - Kerahasiaan berkas tetap menjadi tanggung jawab perangkat dan browser yang kamu pakai.
@@ -556,7 +556,7 @@ Browser memblokir download banyak berkas pada `file://`. Jalankan lewat server l
 Sudah otomatis dimatikan bila sistem operasi mengaktifkan **Reduce Motion**. Periksa di Settings, lalu Accessibility.
 
 **Dashboard kosong atau angka tidak berubah**
-Angka Dashboard memang simulasi. Yang asli hanya `Total Operations`, yang naik setelah kamu menekan tool. Bila kartunya sama sekali tidak muncul, kemungkinan CSS belum termuat.
+Semua angka Dashboard dihitung di perangkatmu; FPS dan frame time baru muncul setelah sekitar 1 detik pertama, dan `—` berarti API terkait tidak didukung perambanmu. Yang disimpan antar-sesi hanya `Total Operations`. Bila kartunya sama sekali tidak muncul, kemungkinan CSS belum termuat.
 
 ---
 

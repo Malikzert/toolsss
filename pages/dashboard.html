@@ -311,37 +311,130 @@
       color: var(--text-muted);
     }
 
-    .mini-grid {
+/* ── Tarot Harian ────────────────────────────────── */
+    .tarot-board {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 0.75rem;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: clamp(0.4rem, 1vw, 0.7rem);
+      align-content: start;
     }
 
-    .mini-card {
+    .tarot-card {
+      /* warna jenis kartu ditumpuk dari class t-*, bisa ditimpa sisi lain */
+      --tc: var(--accent);
+      position: relative;
+      aspect-ratio: 2 / 3;
+      padding: 0;
+      border: 0;
+      background: none;
+      cursor: pointer;
+      perspective: 640px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .tarot-inner {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    .tarot-card.is-open .tarot-inner { transform: rotateY(180deg); }
+
+    .tarot-card:hover .tarot-inner { transform: translateY(-4px); }
+    .tarot-card.is-open:hover .tarot-inner { transform: rotateY(180deg) translateY(-4px); }
+
+    .tarot-back,
+    .tarot-front {
+      position: absolute;
+      inset: 0;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      gap: 0.5rem;
-      padding: 0.85rem 1rem;
-      min-height: 120px;
-      background: color-mix(in srgb, var(--card-bg) 92%, transparent);
-      border: 1px solid var(--card-border);
-      backdrop-filter: blur(16px) saturate(150%);
-      -webkit-backdrop-filter: blur(16px) saturate(150%);
-      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+      align-items: center;
+      justify-content: center;
+      gap: 0.15rem;
+      padding: 0.35rem;
+      text-align: center;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border: 1px solid color-mix(in srgb, var(--tc) 55%, var(--card-border));
+      background:
+        radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--tc) 30%, transparent), transparent 62%),
+        linear-gradient(155deg, color-mix(in srgb, var(--tc) 16%, var(--card-bg)), var(--card-bg));
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+      box-shadow: inset 0 0 18px color-mix(in srgb, var(--tc) 22%, transparent);
+      overflow: hidden;
     }
 
-    .mini-num {
-      font-size: clamp(1.75rem, 3vw, 2.25rem);
+    .tarot-front { transform: rotateY(180deg); }
+
+    .tarot-sigil {
+      font-size: clamp(1rem, 2.6vw, 1.5rem);
+      color: color-mix(in srgb, var(--tc) 80%, var(--text));
+      text-shadow: 0 0 10px color-mix(in srgb, var(--tc) 60%, transparent);
+      animation: tarotShine 3.4s ease-in-out infinite;
+    }
+
+    @keyframes tarotShine {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.12); }
+    }
+
+    .tarot-num {
+      font-size: 0.6rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--tc);
       font-weight: 700;
-      line-height: 0.95;
     }
 
-    .mini-label {
-      font-size: 0.58rem;
-      letter-spacing: 0.2em;
+    .tarot-name {
+      font-size: clamp(0.52rem, 1.1vw, 0.7rem);
+      line-height: 1.15;
+      font-weight: 700;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .tarot-kw {
+      font-size: clamp(0.44rem, 0.9vw, 0.56rem);
+      line-height: 1.3;
+      color: var(--text-sec);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .tarot-board:empty::before {
+      content: 'Menyiapkan kartu…';
+      grid-column: 1 / -1;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--text-muted);
+      text-align: center;
+      padding: 1rem 0;
+    }
+
+    .tarot-card:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .t-major    { --tc: #d9a441; }
+    .t-wands    { --tc: #ff7a3c; }
+    .t-cups     { --tc: #4aa8ff; }
+    .t-swords   { --tc: #b7b9d6; }
+    .t-pentacles{ --tc: #5fd39a; }
+
+    @media (max-width: 520px) {
+      .tarot-board { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .tarot-kw { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tarot-inner, .tarot-sigil { transition: none; animation: none; }
     }
   </style>
 </head>
@@ -357,15 +450,15 @@
       <article class="dash-card">
         <div class="dash-card-header">
           <span class="dash-card-label">System Load</span>
-          <h2 class="dash-card-title">Processing Throughput</h2>
-          <p class="dash-card-desc">Estimasi efisiensi pemrosesan file lokal tanpa upload ke server.</p>
+          <h2 class="dash-card-title">Render Efficiency</h2>
+          <p class="dash-card-desc">FPS terukur dari requestAnimationFrame dibanding refresh rate layar.</p>
         </div>
         <div class="gauge">
           <div class="gauge-ring"></div>
           <div class="gauge-needle" id="gaugeNeedle"></div>
           <div class="gauge-value">
-            <span class="gauge-num" id="gaugeNum">0%</span>
-            <span class="gauge-label">Optimal Load</span>
+            <span class="gauge-num" id="gaugeNum">—</span>
+            <span class="gauge-label" id="gaugeLabel">Efficiency</span>
           </div>
         </div>
         <div class="feature-list">
@@ -379,7 +472,7 @@
         <div class="dash-card-header">
           <span class="dash-card-label">Core Stats</span>
           <h2 class="dash-card-title">Total Operations</h2>
-          <p class="dash-card-desc">Ringkasan pemakaian fitur tools dalam sesi ini.</p>
+          <p class="dash-card-desc">Counter klik tool yang tersimpan di localStorage, plus pemakaian storage sesi ini.</p>
         </div>
         <div class="dash-stat">
           <span class="dash-stat-num" id="opsNum">0</span>
@@ -387,15 +480,15 @@
         </div>
         <div class="bar-row">
           <div class="bar-meta">
-            <span>Reader (PDF/DOCX)</span>
-            <span id="barReaderPct">0%</span>
+            <span>Sesi ini vs Total</span>
+            <span id="barReaderPct">—</span>
           </div>
           <div class="progress-bar"><div class="progress-fill" id="barReader"></div></div>
         </div>
         <div class="bar-row">
           <div class="bar-meta">
-            <span>Crop / Merge / Convert</span>
-            <span id="barUtilPct">0%</span>
+            <span>Storage Terpakai</span>
+            <span id="barUtilPct">—</span>
           </div>
           <div class="progress-bar"><div class="progress-fill" id="barUtil"></div></div>
         </div>
@@ -406,53 +499,16 @@
         </div>
       </article>
 
-      <article class="dash-card">
+<article class="dash-card">
         <div class="dash-card-header">
-          <span class="dash-card-label">Modules</span>
-          <h2 class="dash-card-title">Available Tools</h2>
-          <p class="dash-card-desc">Kelompok fitur yang tersedia dalam satu tampilan terintegrasi.</p>
+          <span class="dash-card-label">Fortune</span>
+          <h2 class="dash-card-title">Tarot Harian</h2>
+          <p class="dash-card-desc">Kartu keberuntungan hari ini. Klik untuk membalik, berlaku 5 kartu per hari.</p>
         </div>
-        <div class="mini-grid">
-          <div class="mini-card">
-            <div>
-              <div class="mini-num">01</div>
-              <div class="mini-label">Dokumen Reader</div>
-            </div>
-            <p class="dash-card-desc">PDF &amp; DOCX preview, navigasi halaman, render cepat.</p>
-          </div>
-          <div class="mini-card">
-            <div>
-              <div class="mini-num">02</div>
-              <div class="mini-label">Studio Tools</div>
-            </div>
-            <p class="dash-card-desc">Potong Gambar, Gabung ke PDF, Konversi, Dev Tools, dan Scan Dokumen dalam satu halaman.</p>
-          </div>
-          <div class="mini-card">
-            <div>
-              <div class="mini-num">03</div>
-              <div class="mini-label">QR Tools</div>
-            </div>
-            <p class="dash-card-desc">Buat, unduh, dan pindai kode QR dari dalam browser.</p>
-          </div>
-          <div class="mini-card">
-            <div>
-              <div class="mini-num">04</div>
-              <div class="mini-label">Maps</div>
-            </div>
-            <p class="dash-card-desc">Penanda, DMS, geocoding Nominatim, dan tautan peta eksternal.</p>
-          </div>
-          <div class="mini-card">
-            <div>
-              <div class="mini-num">05</div>
-              <div class="mini-label">ML CSV Visualizer</div>
-            </div>
-            <p class="dash-card-desc">Analisis CSV, korelasi, regresi, dan split train/test lokal.</p>
-          </div>
-        </div>
+        <div class="tarot-board" id="tarotBoard" aria-live="polite"></div>
         <div class="feature-list">
-          <span class="feature-pill"><span class="dot"></span>Unified View</span>
-          <span class="feature-pill"><span class="dot"></span>Theme Aware</span>
-          <span class="feature-pill"><span class="dot"></span>Valorant Glass</span>
+          <span class="feature-pill"><span class="dot"></span>Deck 78 Kartu</span>
+          <span class="feature-pill"><span class="dot"></span><span id="tarotCount">Terbuka 0 / 5</span></span>
         </div>
       </article>
 
@@ -460,32 +516,32 @@
         <div class="dash-card-header">
           <span class="dash-card-label">Performance</span>
           <h2 class="dash-card-title">Resource Usage</h2>
-          <p class="dash-card-desc">Pemantauan ringan untuk menjaga pengalaman tetap responsif.</p>
+          <p class="dash-card-desc">Semua angka diambil langsung dari browser, bukan simulasi.</p>
         </div>
         <div class="bar-row">
           <div class="bar-meta">
-            <span>Memory Footprint</span>
-            <span id="barMemPct">42%</span>
+            <span>Frame Time (render)</span>
+            <span id="barMemPct">—</span>
           </div>
           <div class="progress-bar"><div class="progress-fill" id="barMem"></div></div>
         </div>
         <div class="bar-row">
           <div class="bar-meta">
-            <span>Canvas / Rendering</span>
-            <span id="barCanvasPct">58%</span>
+            <span>JS Heap (memori)</span>
+            <span id="barCanvasPct">—</span>
           </div>
           <div class="progress-bar"><div class="progress-fill" id="barCanvas"></div></div>
         </div>
         <div class="bar-row">
           <div class="bar-meta">
-            <span>IO / Parsing</span>
-            <span id="barIOPct">36%</span>
+            <span>Long Task (5 dtk)</span>
+            <span id="barIOPct">—</span>
           </div>
           <div class="progress-bar"><div class="progress-fill" id="barIO"></div></div>
         </div>
         <div class="dash-stat" style="margin-top:auto;">
-          <span class="dash-stat-num" id="fpsNum">60</span>
-          <span class="dash-stat-tag">Est. FPS</span>
+          <span class="dash-stat-num" id="fpsNum">—</span>
+          <span class="dash-stat-tag">FPS (rAF, 1 dtk)</span>
         </div>
       </article>
     </section>
@@ -498,9 +554,11 @@
   <script src="../assets/js/valo-ui.js"></script>
   <script src="../assets/js/shortcuts.js"></script>
   <script src="../assets/js/sw-register.js"></script>
+  <script src="../assets/js/tarot.js"></script>
   <script>
     const gaugeNeedle = document.getElementById('gaugeNeedle');
     const gaugeNum = document.getElementById('gaugeNum');
+    const gaugeLabel = document.getElementById('gaugeLabel');
     const opsNum = document.getElementById('opsNum');
     const barReader = document.getElementById('barReader');
     const barReaderPct = document.getElementById('barReaderPct');
@@ -514,55 +572,184 @@
     const barIOPct = document.getElementById('barIOPct');
     const fpsNum = document.getElementById('fpsNum');
 
-    let ops = parseInt(localStorage.getItem('cofde_ops') || '0');
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+    function fmtPct(v) {
+      const digits = v >= 10 ? 1 : (v >= 1 ? 2 : 4);
+      return v.toLocaleString('id-ID', { maximumFractionDigits: digits }) + '%';
+    }
+
+    function fmtMB(bytes) {
+      return (bytes / 1048576).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' MB';
+    }
+
+    let ops = parseInt(localStorage.getItem('cofde_ops') || '0', 10) || 0;
+    let sessionOps = 0;
     opsNum.textContent = ops.toLocaleString('id-ID');
 
-    function easeInOut(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
-
-    function animateGauge() {
-      const target = 68 + Math.sin(Date.now() / 4800) * 12;
-      const clamped = Math.max(20, Math.min(92, target));
-      const deg = (clamped / 100) * 240 - 120;
-      gaugeNeedle.style.transform = 'translateX(-50%) rotate(' + deg + 'deg)';
-      gaugeNum.textContent = Math.round(clamped) + '%';
-      requestAnimationFrame(animateGauge);
+    function renderSessionShare() {
+      const pct = ops > 0 ? (sessionOps / ops) * 100 : 0;
+      barReader.style.width = clamp(pct, 0, 100).toFixed(1) + '%';
+      barReaderPct.textContent = sessionOps.toLocaleString('id-ID') + ' / ' +
+        ops.toLocaleString('id-ID') + ' (' + fmtPct(pct) + ')';
     }
 
-    function animateBars() {
-      const t = (Math.sin(Date.now() / 4200) + 1) / 2;
-      const v1 = 40 + easeInOut(t) * 40;
-      const v2 = 30 + (1 - easeInOut(t)) * 38;
-      const v3 = 38 + Math.sin(Date.now() / 3600) * 16;
-      const v4 = 52 + Math.cos(Date.now() / 5000) * 18;
-      const v5 = 32 + Math.sin(Date.now() / 5600) * 14;
-      const fps = 58 + Math.round(Math.sin(Date.now() / 3200) * 4);
-
-      barReader.style.width = v1.toFixed(1) + '%';
-      barReaderPct.textContent = Math.round(v1) + '%';
-      barUtil.style.width = v2.toFixed(1) + '%';
-      barUtilPct.textContent = Math.round(v2) + '%';
-      barMem.style.width = v3.toFixed(1) + '%';
-      barMemPct.textContent = Math.round(v3) + '%';
-      barCanvas.style.width = v4.toFixed(1) + '%';
-      barCanvasPct.textContent = Math.round(v4) + '%';
-      barIO.style.width = v5.toFixed(1) + '%';
-      barIOPct.textContent = Math.round(v5) + '%';
-      fpsNum.textContent = Math.max(40, Math.min(65, fps));
-      requestAnimationFrame(animateBars);
+    function renderStorage() {
+      if (navigator.storage && navigator.storage.estimate) {
+        navigator.storage.estimate().then(function (r) {
+          const usage = r.usage || 0;
+          const quota = r.quota || 0;
+          if (quota > 0) {
+            const pct = (usage / quota) * 100;
+            barUtil.style.width = clamp(pct, 0, 100).toFixed(2) + '%';
+            barUtilPct.textContent = fmtMB(usage) + ' / ' + fmtMB(quota) + ' (' + fmtPct(pct) + ')';
+          } else {
+            barUtil.style.width = '0%';
+            barUtilPct.textContent = fmtMB(usage);
+          }
+        }).catch(function () { barUtilPct.textContent = '—'; });
+        return;
+      }
+      let bytes = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        bytes += (k.length + (localStorage.getItem(k) || '').length) * 2;
+      }
+      barUtil.style.width = '0%';
+      barUtilPct.textContent = fmtMB(bytes) + ' (localStorage)';
     }
+
+    /* --- pengukuran nyata: FPS, frame pacing, JS heap, long task --- */
+    const deltas = [];
+    let lastFrameAt = performance.now();
+    let windowFrames = 0;
+    let windowStart = lastFrameAt;
+    let refreshMs = 16.7;
+    const longTasks = [];
+    let longTaskSupported = false;
+
+    if (typeof PerformanceObserver === 'function') {
+      try {
+        new PerformanceObserver(function (list) {
+          list.getEntries().forEach(function (e) {
+            longTasks.push({ t: e.startTime, d: e.duration });
+          });
+        }).observe({ entryTypes: ['longtask'] });
+        longTaskSupported = true;
+      } catch (e) { longTaskSupported = false; }
+    }
+
+    function estimateRefresh() {
+      if (deltas.length < 20) return;
+      const hist = {};
+      for (let i = 0; i < deltas.length; i++) {
+        const ms = Math.round(deltas[i]);
+        if (ms >= 5 && ms <= 40) hist[ms] = (hist[ms] || 0) + 1;
+      }
+      let best = 0;
+      let bestN = 0;
+      for (const k in hist) {
+        if (hist[k] > bestN) { bestN = hist[k]; best = Number(k); }
+      }
+      if (best) refreshMs = best;
+    }
+
+    /* laju refresh asli diambil dari delta rAF, lalu didekatkan ke laju
+       monitor standar supaya label tidak menampilkan "63 Hz" untuk layar 60 */
+    const REFRESH_STANDARDS = [30, 45, 50, 60, 72, 75, 90, 100, 120, 144, 165, 240];
+
+    function refreshRate() {
+      const raw = 1000 / refreshMs;
+      for (let i = 0; i < REFRESH_STANDARDS.length; i++) {
+        const s = REFRESH_STANDARDS[i];
+        if (Math.abs(raw - s) / s <= 0.05) return s;
+      }
+      return Math.round(raw);
+    }
+
+    function updateMetrics(now) {
+      const fps = (windowFrames * 1000) / (now - windowStart);
+      const refreshFps = refreshRate();
+      const eff = clamp((fps / refreshFps) * 100, 0, 100);
+
+      fpsNum.textContent = String(Math.round(fps));
+      gaugeNum.textContent = Math.round(eff) + '%';
+      gaugeLabel.textContent = 'vs ' + Math.round(refreshFps) + ' Hz';
+      gaugeNeedle.style.transform = 'translateX(-50%) rotate(' + ((eff / 100) * 240 - 120) + 'deg)';
+
+      let onTime = 0;
+      for (let i = 0; i < deltas.length; i++) {
+        if (deltas[i] >= refreshMs * 0.5 && deltas[i] <= refreshMs * 1.5) onTime++;
+      }
+      const pace = deltas.length ? (onTime / deltas.length) * 100 : 100;
+      barMem.style.width = clamp(pace, 0, 100).toFixed(1) + '%';
+      barMemPct.textContent = fmtPct(pace) + ' dari ' + deltas.length + ' frame';
+
+      if (performance.memory && performance.memory.usedJSHeapSize) {
+        const used = performance.memory.usedJSHeapSize;
+        const limit = performance.memory.jsHeapSizeLimit;
+        const hp = limit ? (used / limit) * 100 : 0;
+        barCanvas.style.width = clamp(hp, 0, 100).toFixed(1) + '%';
+        barCanvasPct.textContent = fmtMB(used) + ' / ' + fmtMB(limit);
+      } else {
+        barCanvas.style.width = '0%';
+        barCanvasPct.textContent = '—';
+      }
+
+      if (longTaskSupported) {
+        const cutoff = now - 5000;
+        while (longTasks.length && longTasks[0].t < cutoff) longTasks.shift();
+        let ms = 0;
+        for (let i = 0; i < longTasks.length; i++) ms += longTasks[i].d;
+        const blocked = clamp((ms / 5000) * 100, 0, 100);
+        barIO.style.width = blocked.toFixed(1) + '%';
+        barIOPct.textContent = longTasks.length + ' tugas / ' + Math.round(ms) + ' ms (' + fmtPct(blocked) + ')';
+      } else {
+        barIO.style.width = '0%';
+        barIOPct.textContent = '—';
+      }
+    }
+
+    function frame(now) {
+      const d = now - lastFrameAt;
+      lastFrameAt = now;
+      if (d > 0 && d < 500) {
+        deltas.push(d);
+        if (deltas.length > 240) deltas.shift();
+      }
+      windowFrames++;
+      if (now - windowStart >= 1000) {
+        estimateRefresh();
+        updateMetrics(now);
+        windowFrames = 0;
+        windowStart = now;
+      }
+      requestAnimationFrame(frame);
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      windowFrames = 0;
+      windowStart = performance.now();
+      lastFrameAt = windowStart;
+      deltas.length = 0;
+    });
 
     function bumpOps() {
       ops++;
+      sessionOps++;
       localStorage.setItem('cofde_ops', String(ops));
       opsNum.textContent = ops.toLocaleString('id-ID');
+      renderSessionShare();
     }
 
     document.addEventListener('click', function (e) {
+      if (e.target.closest('.tarot-card')) return; // hiburan, bukan operasi tools
       if (e.target.closest('.conv-card, .upload-area, button')) bumpOps();
     }, { passive: true });
 
-    animateGauge();
-    animateBars();
+    renderSessionShare();
+    renderStorage();
+    requestAnimationFrame(frame);
   </script>
 </body>
 </html>
