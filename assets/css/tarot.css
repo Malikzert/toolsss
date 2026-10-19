@@ -1,0 +1,278 @@
+/* ── Tarot Harian ────────────────────────────────── */
+.tt-page { width: 100%; }
+
+.tt-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(258px, 330px);
+  gap: clamp(0.8rem, 2vw, 1.4rem);
+  align-items: start;
+}
+
+.tt-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.9rem, 2.5vw, 1.4rem);
+  min-height: min(72vh, 560px);
+  padding: clamp(1.2rem, 3vw, 2rem) 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse at 50% 26%, color-mix(in srgb, var(--accent) 15%, transparent), transparent 64%),
+    radial-gradient(circle at 84% 86%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 58%),
+    var(--card-bg);
+  overflow: hidden;
+  perspective: 1500px;
+}
+
+/* tumpukan kartu */
+.tt-card {
+  --tc: var(--accent);
+  position: relative;
+  display: block;
+  width: clamp(198px, 38vw, 286px);
+  aspect-ratio: 2 / 3;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  perspective: 1500px;
+  -webkit-tap-highlight-color: transparent;
+  filter: drop-shadow(0 16px 24px rgba(0, 0, 0, 0.3));
+}
+
+.tt-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  transition: opacity 0.45s ease;
+}
+
+.tt-stack i {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--accent) 20%, var(--card-bg)), var(--card-bg));
+}
+
+.tt-stack i:nth-child(1) { transform: translate(11px, 7px) rotate(4deg); }
+.tt-stack i:nth-child(2) { transform: translate(-10px, 9px) rotate(-5deg); }
+.tt-stack i:nth-child(3) { transform: translate(3px, 14px) rotate(1.5deg); opacity: 0.7; }
+
+.tt-card.is-open .tt-stack,
+.tt-card[disabled] .tt-stack { opacity: 0; }
+
+.tt-inner {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  transform-style: preserve-3d;
+  transition: transform 0.78s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.tt-card.is-open .tt-inner { transform: rotateY(180deg); }
+.tt-card:not(.is-open):hover .tt-inner,
+.tt-card:not(.is-open):focus-visible .tt-inner { transform: translateY(-8px); }
+.tt-card.is-open:hover .tt-inner { transform: rotateY(180deg) translateY(-4px); }
+
+.tt-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid color-mix(in srgb, var(--tc) 55%, var(--card-border));
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--tc) 26%, transparent), transparent 65%),
+    linear-gradient(155deg, color-mix(in srgb, var(--tc) 13%, var(--card-bg)), var(--card-bg));
+  box-shadow: inset 0 0 22px color-mix(in srgb, var(--tc) 18%, transparent);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}
+
+.tt-back {
+  align-items: center;
+  justify-content: center;
+  padding: 6%;
+  transform: rotateY(180deg);
+}
+
+.tt-back .tt-art { width: 100%; height: 100%; }
+
+.tt-front { transform: rotateY(180deg); }
+
+.tt-artbox {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5% 9% 0;
+}
+
+.tt-artbox .tt-art { width: 100%; height: 100%; }
+
+.tt-caption {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.35rem 0.7rem 0.7rem;
+  text-align: center;
+}
+
+.tt-fnum {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--tc);
+}
+
+.tt-fname {
+  font-size: clamp(0.86rem, 2.4vw, 1.06rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.tt-fkw {
+  font-size: clamp(0.5rem, 1.2vw, 0.6rem);
+  line-height: 1.3;
+  color: var(--text-sec);
+}
+
+.tt-hint {
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.tt-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.tt-card:not(.is-loading) .tt-loading { display: none; }
+
+.tt-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+}
+
+/* panel keterangan */
+.tt-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: clamp(0.9rem, 2vw, 1.2rem);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  background: var(--card-bg);
+}
+
+.tt-eyebrow {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.tt-panel-title {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.tt-panel-text {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.6;
+  color: var(--text-sec);
+}
+
+.tt-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.tt-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.22rem 0.52rem;
+  border: 1px solid color-mix(in srgb, var(--tc, var(--accent)) 55%, var(--card-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tc, var(--accent)) 12%, transparent);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tc, var(--accent));
+}
+
+.tt-chip--soft {
+  border-color: var(--card-border);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.tt-rule {
+  height: 1px;
+  margin: 0.15rem 0;
+  border: 0;
+  background: var(--card-border);
+}
+
+.tt-note {
+  margin: 0;
+  font-size: 0.66rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.tt-swatch {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--tc, var(--accent));
+}
+
+/* warna jenis kartu (harus setelah .tt-card supaya meng-override) */
+.t-major    { --tc: #d9a441; }
+.t-wands    { --tc: #ff7a3c; }
+.t-cups     { --tc: #4aa8ff; }
+.t-swords   { --tc: #8f93b8; }
+.t-pentacles{ --tc: #2f9c72; }
+
+@media (max-width: 860px) {
+  .tt-layout { grid-template-columns: 1fr; }
+  .tt-stage { min-height: auto; }
+}
+
+@media (max-width: 520px) {
+  .tt-card { width: min(72vw, 262px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-inner, .tt-stack, .tt-card { transition: none !important; }
+}

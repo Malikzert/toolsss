@@ -4,7 +4,7 @@
      - CDN libraries (cross origin): cache-first, they are version-pinned URLs
      - navigations: network first, fall back to cached index.html
 */
-var VERSION = 'cofde-v21';
+var VERSION = 'cofde-v22';
 var SHELL_CACHE = VERSION + '-shell';
 var CDN_CACHE = VERSION + '-cdn';
 
@@ -18,6 +18,7 @@ var SHELL = [
   '../pages/listdiff.html',
   '../pages/timer.html',
   '../pages/random.html',
+  '../pages/tarot.html',
   '../pages/crop.html',
   '../pages/gabung.html',
   '../pages/merge.html',
@@ -37,6 +38,7 @@ var SHELL = [
   '../assets/css/listdiff.css',
   '../assets/css/timer.css',
   '../assets/css/picker.css',
+  '../assets/css/tarot.css',
   '../assets/js/drawer.js',
   '../assets/js/valo-sky.js',
   '../assets/js/valo-gate.js',
@@ -50,6 +52,7 @@ var SHELL = [
   '../assets/js/tools-gabung.js',
   '../assets/js/tools-konversi.js',
   '../assets/js/tarot.js',
+  '../assets/js/tarot-page.js',
   '../assets/js/scan-page.js',
   '../assets/js/devtools-page.js',
   '../assets/js/qr-page.js',

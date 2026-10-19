@@ -312,129 +312,79 @@
     }
 
 /* ── Tarot Harian ────────────────────────────────── */
-    .tarot-board {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: clamp(0.4rem, 1vw, 0.7rem);
-      align-content: start;
-    }
-
-    .tarot-card {
-      /* warna jenis kartu ditumpuk dari class t-*, bisa ditimpa sisi lain */
-      --tc: var(--accent);
-      position: relative;
-      aspect-ratio: 2 / 3;
-      padding: 0;
-      border: 0;
-      background: none;
-      cursor: pointer;
-      perspective: 640px;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .tarot-inner {
-      position: absolute;
-      inset: 0;
-      transform-style: preserve-3d;
-      transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1);
-    }
-
-    .tarot-card.is-open .tarot-inner { transform: rotateY(180deg); }
-
-    .tarot-card:hover .tarot-inner { transform: translateY(-4px); }
-    .tarot-card.is-open:hover .tarot-inner { transform: rotateY(180deg) translateY(-4px); }
-
-    .tarot-back,
-    .tarot-front {
-      position: absolute;
-      inset: 0;
+    .tarot-cta {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 0.15rem;
-      padding: 0.35rem;
-      text-align: center;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-      border: 1px solid color-mix(in srgb, var(--tc) 55%, var(--card-border));
+      gap: clamp(0.6rem, 1.6vw, 0.9rem);
+      margin-top: 0.35rem;
+      padding: clamp(0.75rem, 1.8vw, 1rem);
+      border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--card-border));
+      border-radius: 14px;
       background:
-        radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--tc) 30%, transparent), transparent 62%),
-        linear-gradient(155deg, color-mix(in srgb, var(--tc) 16%, var(--card-bg)), var(--card-bg));
-      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
-      box-shadow: inset 0 0 18px color-mix(in srgb, var(--tc) 22%, transparent);
+        radial-gradient(circle at 14% 50%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 72%),
+        linear-gradient(150deg, color-mix(in srgb, var(--accent) 12%, var(--card-bg)), var(--card-bg));
+      color: inherit;
+      text-decoration: none;
       overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
     }
 
-    .tarot-front { transform: rotateY(180deg); }
-
-    .tarot-sigil {
-      font-size: clamp(1rem, 2.6vw, 1.5rem);
-      color: color-mix(in srgb, var(--tc) 80%, var(--text));
-      text-shadow: 0 0 10px color-mix(in srgb, var(--tc) 60%, transparent);
-      animation: tarotShine 3.4s ease-in-out infinite;
+    .tarot-cta:hover {
+      transform: translateY(-3px);
+      border-color: color-mix(in srgb, var(--accent) 80%, var(--card-border));
+      box-shadow: 0 14px 26px rgba(0, 0, 0, 0.22);
     }
 
-    @keyframes tarotShine {
-      0%, 100% { opacity: 0.5; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.12); }
-    }
-
-    .tarot-num {
-      font-size: 0.6rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--tc);
-      font-weight: 700;
-    }
-
-    .tarot-name {
-      font-size: clamp(0.52rem, 1.1vw, 0.7rem);
-      line-height: 1.15;
-      font-weight: 700;
-      color: var(--text);
-      overflow-wrap: anywhere;
-    }
-
-    .tarot-kw {
-      font-size: clamp(0.44rem, 0.9vw, 0.56rem);
-      line-height: 1.3;
-      color: var(--text-sec);
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .tarot-board:empty::before {
-      content: 'Menyiapkan kartu…';
-      grid-column: 1 / -1;
-      font-size: 0.7rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      text-align: center;
-      padding: 1rem 0;
-    }
-
-    .tarot-card:focus-visible {
+    .tarot-cta:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 3px;
     }
 
-    .t-major    { --tc: #d9a441; }
-    .t-wands    { --tc: #ff7a3c; }
-    .t-cups     { --tc: #4aa8ff; }
-    .t-swords   { --tc: #b7b9d6; }
-    .t-pentacles{ --tc: #5fd39a; }
-
-    @media (max-width: 520px) {
-      .tarot-board { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-      .tarot-kw { display: none; }
+    .tarot-cta-mark {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: clamp(36px, 5.5vw, 44px);
+      aspect-ratio: 2 / 3;
+      color: var(--accent);
+      border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--card-border));
+      border-radius: 7px;
+      background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 26%, var(--card-bg)), var(--card-bg));
+      box-shadow: inset 0 0 10px color-mix(in srgb, var(--accent) 28%, transparent);
+      clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      .tarot-inner, .tarot-sigil { transition: none; animation: none; }
+    .tarot-cta-mark svg { width: 66%; height: 66%; }
+
+    .tarot-cta-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.12rem;
+      min-width: 0;
+    }
+
+    .tarot-cta-body strong {
+      font-size: clamp(0.9rem, 1.6vw, 1.04rem);
+      color: var(--text);
+    }
+
+    .tarot-cta-body span {
+      font-size: 0.7rem;
+      color: var(--text-sec);
+    }
+
+    .tarot-cta-arrow {
+      margin-left: auto;
+      font-size: 1.1rem;
+      color: var(--accent);
+      transition: transform 0.18s ease;
+    }
+
+    .tarot-cta:hover .tarot-cta-arrow { transform: translateX(4px); }
+
+    .tarot-cta.is-drawn {
+      border-color: color-mix(in srgb, var(--accent) 72%, var(--card-border));
     }
   </style>
 </head>
@@ -503,12 +453,25 @@
         <div class="dash-card-header">
           <span class="dash-card-label">Fortune</span>
           <h2 class="dash-card-title">Tarot Harian</h2>
-          <p class="dash-card-desc">Kartu keberuntungan hari ini. Klik untuk membalik, berlaku 5 kartu per hari.</p>
+          <p class="dash-card-desc">Satu kartu per hari dari dek 78, dengan artwork SVG yang digambar dari kode.</p>
         </div>
-        <div class="tarot-board" id="tarotBoard" aria-live="polite"></div>
+        <a class="tarot-cta" id="tarotCta" href="tarot.html">
+          <span class="tarot-cta-mark" aria-hidden="true">
+            <svg viewBox="0 0 100 150" role="img">
+              <rect x="6" y="6" width="88" height="138" rx="9" fill="none" stroke="currentColor" stroke-width="5" opacity="0.6"/>
+              <polygon points="50,30 62,63 95,75 62,87 50,120 38,87 5,75 38,63" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+              <circle cx="50" cy="75" r="7" fill="currentColor"/>
+            </svg>
+          </span>
+          <span class="tarot-cta-body">
+            <strong>Coba Keberuntungan Hari Ini</strong>
+            <span id="tarotStatus">Kartu hari ini belum dibuka</span>
+          </span>
+          <span class="tarot-cta-arrow" aria-hidden="true">&rarr;</span>
+        </a>
         <div class="feature-list">
           <span class="feature-pill"><span class="dot"></span>Deck 78 Kartu</span>
-          <span class="feature-pill"><span class="dot"></span><span id="tarotCount">Terbuka 0 / 5</span></span>
+          <span class="feature-pill"><span class="dot"></span>1 Kartu / Hari</span>
         </div>
       </article>
 
@@ -743,9 +706,19 @@
     }
 
     document.addEventListener('click', function (e) {
-      if (e.target.closest('.tarot-card')) return; // hiburan, bukan operasi tools
       if (e.target.closest('.conv-card, .upload-area, button')) bumpOps();
     }, { passive: true });
+
+    (function tarotStatus() {
+      var el = document.getElementById('tarotStatus');
+      var cta = document.getElementById('tarotCta');
+      if (!el || !cta || !window.Tarot) return;
+      var key = window.Tarot.todayKey();
+      if (!window.Tarot.loadState(key).drawn) return;
+      var card = window.Tarot.dailyCard(window.Tarot.buildDeck(), key);
+      el.textContent = 'Hari ini: ' + card.name;
+      cta.classList.add('is-drawn');
+    })();
 
     renderSessionShare();
     renderStorage();

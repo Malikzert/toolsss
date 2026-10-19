@@ -13,6 +13,7 @@
     { href: 'listdiff.html',  label: 'List Diff' },
     { href: 'timer.html',     label: 'Timer' },
     { href: 'random.html',    label: 'Random Picker' },
+    { href: 'tarot.html',     label: 'Tarot Harian' },
     { href: 'merge.html',     label: 'Merge PDF' },
     { href: 'split.html',     label: 'Split PDF' },
     { href: 'expense.html',   label: 'Expense Tracker' },

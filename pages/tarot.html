@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tarot Harian &mdash; COFDE Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/tarot.css">
+  <link rel="stylesheet" href="../assets/css/valo.css">
+  <link rel="manifest" href="../pwa/manifest.webmanifest">
+  <link rel="icon" href="../pwa/icons/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#ff4655">
+  <link rel="apple-touch-icon" href="../pwa/icons/icon-192.png">
+</head>
+
+<body>
+<div class="cx-page tt-page">
+
+  <header class="cx-head">
+    <div>
+      <h1 class="cx-title">Tarot Harian</h1>
+      <p class="cx-sub">Satu kartu per hari. Klik tumpukan dek untuk membukanya.</p>
+    </div>
+    <a class="cx-btn" href="dashboard.html">&larr; Kembali Dashboard</a>
+  </header>
+
+  <div class="tt-layout">
+
+    <section class="tt-stage" aria-label="Dek kartu tarot">
+      <button class="tt-card is-loading" id="ttCard" type="button" aria-label="Buka kartu hari ini">
+        <span class="tt-stack" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="tt-inner" id="ttInner">
+          <span class="tt-face tt-back" id="ttBack"></span>
+          <span class="tt-face tt-front" id="ttFront"></span>
+        </span>
+        <span class="tt-loading">Menyiapkan kartu&hellip;</span>
+      </button>
+      <p class="tt-hint" id="ttHint">Klik kartu untuk membukanya</p>
+    </section>
+
+    <aside class="tt-panel" id="ttPanel">
+      <span class="tt-eyebrow">Tarot Harian</span>
+      <h2 class="tt-panel-title" id="ttPanelTitle">Dek 78 kartu siap</h2>
+      <p class="tt-panel-text" id="ttPanelText">Tarot di sini bukan ramalan. Anggap saja kartu sebagai bahan
+        refleksi: kata kuncinya bisa jadi sudut pandang baru untuk memikirkan hari ini.</p>
+      <div class="tt-chips" id="ttChips" hidden></div>
+      <hr class="tt-rule">
+      <p class="tt-note" id="ttNote">Kartu hari ini dipilih dari tanggal, jadi deknya sama untuk semua orang dan
+        baru berubah saat hari berganti. Semua tersimpan lokal di browser ini.</p>
+    </aside>
+
+  </div>
+
+</div>
+
+<script src="../assets/js/toast.js"></script>
+<script src="../assets/js/guard.js"></script>
+<script src="../assets/js/fmt.js"></script>
+<script src="../assets/js/settings.js"></script>
+<script src="../assets/js/net.js"></script>
+<script src="../assets/js/cmdpal.js"></script>
+<script src="../assets/js/particles.js"></script>
+<script src="../assets/js/valo-sky.js"></script>
+<script src="../assets/js/drawer.js"></script>
+<script src="../assets/js/valo-gate.js"></script>
+<script src="../assets/js/valo-ui.js"></script>
+<script src="../assets/js/dropdown.js"></script>
+<script src="../assets/js/shortcuts.js"></script>
+<script src="../assets/js/sw-register.js"></script>
+<script src="../assets/js/tarot.js"></script>
+<script src="../assets/js/tarot-page.js"></script>
+</body>
+</html>

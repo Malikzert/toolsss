@@ -58,7 +58,7 @@ Tidak perlu install apa pun.
 2. Klik tombol menu di pojok kiri atas
 3. Pilih fitur yang diperlukan
 
-Ada 11 tool di dalam COFDE: Dashboard, Reader, Potong Gambar, Gabung ke PDF, Konversi, Gabung PDF, Pisah PDF, Dev Tools, QR, Maps, dan ML CSV Visualizer.
+Ada 12 tool di dalam COFDE: Dashboard, Reader, Potong Gambar, Gabung ke PDF, Konversi, Gabung PDF, Pisah PDF, Dev Tools, QR, Maps, ML CSV Visualizer, dan Tarot Harian.
 
 Kalau halaman masih menampilkan versi lama, paksa refresh dengan **Ctrl+Shift+R**.
 
@@ -76,7 +76,7 @@ Ringkasan seluruh fitur dalam satu tampilan.
 |---|---|
 | **Speedometer** | Gauge "Render Efficiency": FPS terukur dari `requestAnimationFrame` dibanding refresh rate layar yang dievaluasi sendiri |
 | **Total Operations** | Counter operasi sesi (localStorage), bar "Sesi ini vs Total", plus storage terpakai dari `navigator.storage.estimate()` |
-| **Tarot Harian** | Deck 78 kartu (22 Major + 56 Minor), 5 kartu per hari, dikocok dari seed tanggal, warna kartu mengikuti jenisnya |
+| **Tarot Harian** | Tombol menuju halaman Tarot: deck 78 kartu (22 Major + 56 Minor), satu kartu per hari dari seed tanggal, setiap kartu punya artwork SVG sendiri |
 | **Resource Usage** | FPS per detik, frame pacing, JS Heap dari `performance.memory`, dan long task dari `PerformanceObserver` |
 
 Semua angka pada Dashboard **diukur langsung dari browser**, bukan animasi karangan. Yang tidak bisa diukur browser (misalnya pemakaian CPU/GPU per proses) tidak ditampilkan. `Total Operations` tetap satu-satunya data yang disimpan antar-sesi. Metrik yang tidak didukung peramban (misalnya `performance.memory` di luar Chrome) tampil sebagai `—`.
@@ -347,6 +347,22 @@ Generator angka acak memakai seed, jadi hasil split dapat direproduksi. Data di 
 
 ---
 
+### 12 Tarot Harian
+
+Halaman terpisah untuk menarik satu kartu refleksi per hari. Dek berisi 78 kartu (22 Major Arcana + 56 Minor), dan setiap kartu digambar sebagai SVG langsung di dalam kode — tidak ada berkas gambar.
+
+| Bagian | Fungsi |
+|---|---|
+| **Tumpukan deck** | Tiga lapis kartu yang bisa diklik, atau dibuka dengan `Enter`/`Spasi` |
+| **Flip** | Membalik kartu dengan animasi 3D, lalu menampilkan artwork, nomor, nama, dan kata kunci |
+| **Kartu harian** | Dipilih deterministik dari tanggal lokal, jadi kartu hari itu sama walau halaman dimuat ulang |
+| **Penyimpanan** | Status "sudah dibuka" disimpan di `localStorage` (`cofde_tarot_v1`) dan otomatis reset saat tanggal berganti |
+| **Panel keterangan** | Kata kunci dan tanggal; warna kartu mengikuti jenisnya (Major, Tongkat, Piala, Pedang, Pentakel) |
+
+Kartu yang sama muncul untuk semua orang pada tanggal yang sama karena seed-nya berasal dari tanggal, bukan dari perangkat. Dashboard hanya menampilkan satu tombol menuju halaman ini, plus status kartu hari ini bila sudah dibuka.
+
+---
+
 ## Pintasan Keyboard
 
 Shortcut aktif di semua halaman tool, dan otomatis dinonaktifkan saat kamu mengetik di kolom isian, textarea, atau elemen yang bisa diedit.
@@ -442,8 +458,10 @@ Buka `http://localhost:3000`
 |   |-- qr.html                      # 09 QR Tools
 |   |-- maps.html                    # 10 Maps
 |   `-- mlcsv.html                   # 11 ML CSV Visualizer
+|   `-- tarot.html                   # 12 Tarot Harian
 |-- assets/
 |   |-- css/style.css                # Tema, drawer, glassmorphism, Valorant
+|   |-- css/tarot.css                # Halaman Tarot Harian
 |   `-- js/
 |       |-- drawer.js                # Sidebar, theme switcher, brand corner
 |       |-- particles.js             # Glass shards, bokeh, mouse flecks
@@ -453,6 +471,7 @@ Buka `http://localhost:3000`
 |       |-- qr.js / qr-page.js                 # 09 Logika + controller halaman
 |       |-- maps.js / maps-page.js             # 10 Logika + controller halaman
 |       `-- mlcsv.js / mlcsv-page.js           # 11 Logika + controller halaman
+|       `-- tarot.js / tarot-page.js           # 12 Logika + controller halaman
 |-- pwa/
 |   |-- manifest.webmanifest         # Manifest, icon, dan shortcut
 |   `-- icons/                       # icon.svg + PNG 192/512 dan maskable
